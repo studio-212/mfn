@@ -1,0 +1,1145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>mfn · admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;1,400;1,700&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+:root {
+  --bg:     #2a3828;
+  --bg2:    #1e2e1c;
+  --bg3:    #162414;
+  --cream:  #e8e0cc;
+  --dim:    rgba(232,224,204,0.45);
+  --border: rgba(232,224,204,0.1);
+  --fd:     'Playfair Display', Georgia, serif;
+  --fu:     'Jost', sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { min-height: 100vh; background: var(--bg); color: var(--cream); font-family: var(--fu); font-size: 14px; font-weight: 300; }
+a { color: inherit; text-decoration: none; }
+
+/* ── Loading ── */
+#loading {
+  position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+  background: var(--bg); z-index: 999;
+}
+.spinner {
+  width: 28px; height: 28px; border-radius: 50%;
+  border: 1.5px solid rgba(232,224,204,0.15);
+  border-top-color: rgba(232,224,204,0.6);
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Login ── */
+#login-screen {
+  display: none; min-height: 100vh;
+  align-items: center; justify-content: center;
+}
+.login-card {
+  width: 100%; max-width: 360px; padding: 48px 40px;
+  background: var(--bg2); border: 0.5px solid var(--border);
+  border-radius: 8px;
+}
+.login-title {
+  font-family: var(--fd); font-style: italic; font-weight: 700;
+  font-size: 40px; color: var(--cream); letter-spacing: -0.02em;
+  line-height: 1; margin-bottom: 4px;
+}
+.login-sub {
+  font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--cream); opacity: 0.3; margin-bottom: 36px;
+}
+.login-error {
+  font-size: 11px; color: #e88a6a; margin-bottom: 16px;
+  min-height: 16px; letter-spacing: 0.04em;
+}
+
+/* ── App shell ── */
+#app { display: none; min-height: 100vh; }
+
+header {
+  position: sticky; top: 0; z-index: 50;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 32px; height: 56px;
+  background: var(--bg3); border-bottom: 0.5px solid var(--border);
+}
+.header-title {
+  font-family: var(--fd); font-style: italic;
+  font-size: 18px; color: var(--cream); opacity: 0.8;
+  letter-spacing: 0.04em;
+}
+.header-user { font-size: 10px; color: var(--cream); opacity: 0.35; letter-spacing: 0.1em; }
+
+/* ── Tabs ── */
+nav.tabs {
+  display: flex; gap: 0; overflow-x: auto;
+  border-bottom: 0.5px solid var(--border);
+  padding: 0 32px; background: var(--bg2);
+}
+.tab-btn {
+  padding: 14px 20px; font-size: 9px; font-weight: 400;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--cream); opacity: 0.35; cursor: pointer;
+  background: none; border: none; border-bottom: 1.5px solid transparent;
+  transition: opacity 0.2s, border-color 0.2s; white-space: nowrap;
+}
+.tab-btn:hover { opacity: 0.7; }
+.tab-btn.active { opacity: 1; border-bottom-color: var(--cream); }
+
+/* ── Panel ── */
+#panel { padding: 40px 32px 80px; max-width: 900px; }
+
+/* ── Forms ── */
+.field { margin-bottom: 20px; }
+.field label {
+  display: block; font-size: 8px; font-weight: 400;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--cream); opacity: 0.4; margin-bottom: 8px;
+}
+.field input, .field textarea, .field select {
+  width: 100%; background: var(--bg2); color: var(--cream);
+  border: none; border-bottom: 0.5px solid var(--border);
+  padding: 10px 0; font-family: var(--fu); font-size: 14px; font-weight: 300;
+  outline: none; transition: border-color 0.2s; border-radius: 0;
+  appearance: none;
+}
+.field input:focus, .field textarea:focus { border-bottom-color: rgba(232,224,204,0.5); }
+.field textarea { resize: vertical; min-height: 100px; line-height: 1.7; }
+.field input[type="checkbox"] {
+  width: auto; height: 16px; width: 16px;
+  accent-color: var(--cream); cursor: pointer; border-bottom: none; padding: 0;
+}
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+.field-row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+.field-check { display: flex; align-items: center; gap: 10px; padding-top: 24px; }
+.field-check label { margin: 0; opacity: 0.6; font-size: 11px; letter-spacing: 0.08em; text-transform: none; }
+
+/* ── Buttons ── */
+.btn-primary {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 11px 24px; border-radius: 99px;
+  background: var(--cream); color: var(--bg);
+  font-family: var(--fu); font-size: 9px; font-weight: 400;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  border: none; cursor: pointer; transition: opacity 0.2s;
+}
+.btn-primary:hover { opacity: 0.85; }
+.btn-primary:disabled { opacity: 0.35; cursor: default; }
+.btn-outline {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 10px 22px; border-radius: 99px;
+  background: none; color: var(--cream);
+  border: 0.5px solid rgba(232,224,204,0.25);
+  font-family: var(--fu); font-size: 9px; font-weight: 400;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  cursor: pointer; transition: border-color 0.2s;
+}
+.btn-outline:hover { border-color: rgba(232,224,204,0.6); }
+.btn-danger {
+  background: none; border: none; cursor: pointer;
+  font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--cream); opacity: 0.2; padding: 0;
+  transition: opacity 0.2s; font-family: var(--fu);
+}
+.btn-danger:hover { opacity: 0.7; color: #e88a6a; }
+.btn-small {
+  padding: 7px 16px; font-size: 8px; border-radius: 99px;
+  background: none; color: var(--cream);
+  border: 0.5px solid rgba(232,224,204,0.2);
+  font-family: var(--fu); letter-spacing: 0.14em; text-transform: uppercase;
+  cursor: pointer; transition: border-color 0.2s;
+}
+.btn-small:hover { border-color: rgba(232,224,204,0.5); }
+.btn-row { display: flex; gap: 12px; align-items: center; margin-top: 28px; flex-wrap: wrap; }
+
+/* ── Section header ── */
+.section-head {
+  display: flex; align-items: baseline; justify-content: space-between;
+  margin-bottom: 32px; padding-bottom: 16px;
+  border-bottom: 0.5px solid var(--border);
+}
+.section-title {
+  font-family: var(--fd); font-style: italic; font-weight: 700;
+  font-size: 32px; color: var(--cream); letter-spacing: -0.02em;
+}
+
+/* ── List items ── */
+.list-table { width: 100%; border-collapse: collapse; margin-bottom: 32px; }
+.list-table th {
+  text-align: left; font-size: 8px; font-weight: 400;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--cream); opacity: 0.3;
+  padding: 0 0 12px; border-bottom: 0.5px solid var(--border);
+}
+.list-table td {
+  padding: 14px 0; border-bottom: 0.5px solid rgba(232,224,204,0.05);
+  vertical-align: middle; font-size: 13px;
+}
+.list-table td:last-child { text-align: right; }
+.td-actions { display: flex; gap: 12px; justify-content: flex-end; align-items: center; }
+.badge { display: inline-block; font-size: 7px; letter-spacing: 0.12em; text-transform: uppercase;
+  padding: 3px 8px; border-radius: 99px; }
+.badge-sold { background: rgba(232,224,204,0.1); color: var(--cream); }
+.badge-active { background: rgba(100,180,80,0.15); color: #8dc870; }
+.badge-inactive { background: rgba(232,224,204,0.06); color: var(--cream); opacity: 0.4; }
+
+/* ── Inline edit form ── */
+.edit-form {
+  background: var(--bg2); border: 0.5px solid var(--border);
+  border-radius: 6px; padding: 28px; margin-bottom: 20px;
+}
+.edit-form-title {
+  font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--cream); opacity: 0.4; margin-bottom: 24px;
+}
+
+/* ── Sub-items (tracks, quotes) ── */
+.sub-section { margin-top: 28px; }
+.sub-title {
+  font-size: 8px; letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--cream); opacity: 0.3; margin-bottom: 14px;
+  padding-bottom: 8px; border-bottom: 0.5px solid var(--border);
+}
+.sub-item {
+  display: flex; align-items: center; gap: 16px; padding: 10px 0;
+  border-bottom: 0.5px solid rgba(232,224,204,0.05); font-size: 13px;
+}
+.sub-item-main { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+.sub-item-label { font-family: var(--fd); font-style: italic; font-size: 15px; }
+.sub-item-meta { font-size: 10px; color: var(--cream); opacity: 0.35; letter-spacing: 0.04em; }
+
+/* ── Image preview ── */
+.img-preview {
+  width: 80px; height: 96px; border-radius: 4px; overflow: hidden;
+  background: rgba(232,224,204,0.06); border: 0.5px solid var(--border);
+  flex-shrink: 0;
+}
+.img-preview img { width: 100%; height: 100%; object-fit: cover; }
+.img-upload-row { display: flex; gap: 16px; align-items: flex-end; }
+.img-upload-row .field { flex: 1; margin-bottom: 0; }
+
+/* ── Toast ── */
+#toast {
+  position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%);
+  background: var(--bg2); border: 0.5px solid var(--border);
+  color: var(--cream); font-size: 11px; letter-spacing: 0.08em;
+  padding: 12px 24px; border-radius: 99px;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.3s;
+  white-space: nowrap; z-index: 200;
+}
+#toast.show { opacity: 1; }
+
+/* ── Divider ── */
+.divider { border: none; border-top: 0.5px solid var(--border); margin: 32px 0; }
+
+/* ── Responsive ── */
+@media (max-width: 600px) {
+  #panel { padding: 24px 20px 60px; }
+  nav.tabs { padding: 0 16px; }
+  header { padding: 0 20px; }
+  .field-row, .field-row3 { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div id="loading"><div class="spinner"></div></div>
+
+<div id="login-screen">
+  <div class="login-card">
+    <h1 class="login-title">Admin</h1>
+    <p class="login-sub">mau from nowhere</p>
+    <p class="login-error" id="login-error"></p>
+    <div class="field">
+      <label>Email</label>
+      <input type="email" id="login-email" placeholder="you@example.com" autocomplete="email">
+    </div>
+    <div class="field" style="margin-bottom:28px">
+      <label>Password</label>
+      <input type="password" id="login-password" autocomplete="current-password">
+    </div>
+    <button class="btn-primary" onclick="doLogin()" id="login-btn">Sign in</button>
+  </div>
+</div>
+
+<div id="app">
+  <header>
+    <span class="header-title">mfn admin</span>
+    <div style="display:flex;align-items:center;gap:20px">
+      <span class="header-user" id="header-email"></span>
+      <button class="btn-small" onclick="doSignOut()">Sign out</button>
+    </div>
+  </header>
+
+  <nav class="tabs">
+    <button class="tab-btn active" data-tab="shows"    onclick="showTab('shows')">Shows</button>
+    <button class="tab-btn"        data-tab="shop"     onclick="showTab('shop')">Shop</button>
+    <button class="tab-btn"        data-tab="releases" onclick="showTab('releases')">Releases</button>
+    <button class="tab-btn"        data-tab="about"    onclick="showTab('about')">About</button>
+    <button class="tab-btn"        data-tab="settings" onclick="showTab('settings')">Settings</button>
+  </nav>
+
+  <div id="panel"></div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+/* ─── CONFIG ─────────────────────────────────────────────── */
+const SUPABASE_URL  = 'https://rxeprhywtmgyoweqbcjd.supabase.co';
+const SUPABASE_ANON = 'sb_publishable_6D-k9kzeoj3EjJ569mPiHw_0NndyVLT';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+/* ─── UTILS ──────────────────────────────────────────────── */
+function toast(msg, dur = 2400) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), dur);
+}
+
+function esc(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+async function uploadImage(file, path) {
+  const { error } = await sb.storage.from('media').upload(path, file, { upsert: true });
+  if (error) throw error;
+  const { data: { publicUrl } } = sb.storage.from('media').getPublicUrl(path);
+  return publicUrl;
+}
+
+function imgPreviewHtml(url, id) {
+  return `<div class="img-preview" id="${id}">${url ? `<img src="${esc(url)}">` : ''}</div>`;
+}
+
+/* ─── AUTH ───────────────────────────────────────────────── */
+async function doLogin() {
+  const btn   = document.getElementById('login-btn');
+  const email = document.getElementById('login-email').value.trim();
+  const pass  = document.getElementById('login-password').value;
+  const errEl = document.getElementById('login-error');
+  errEl.textContent = '';
+  btn.disabled = true; btn.textContent = 'Signing in…';
+  const { error } = await sb.auth.signInWithPassword({ email, password: pass });
+  if (error) {
+    errEl.textContent = error.message;
+    btn.disabled = false; btn.textContent = 'Sign in';
+  }
+}
+
+document.getElementById('login-password').addEventListener('keydown', e => {
+  if (e.key === 'Enter') doLogin();
+});
+
+async function doSignOut() {
+  await sb.auth.signOut();
+}
+
+async function init() {
+  const { data: { session } } = await sb.auth.getSession();
+  document.getElementById('loading').style.display = 'none';
+  if (session) {
+    enterApp(session.user.email);
+  } else {
+    document.getElementById('login-screen').style.display = 'flex';
+  }
+}
+
+sb.auth.onAuthStateChange((event, session) => {
+  if (event === 'SIGNED_IN' && session) {
+    document.getElementById('login-screen').style.display = 'none';
+    if (document.getElementById('app').style.display === 'none') {
+      enterApp(session.user.email);
+    }
+  }
+  if (event === 'SIGNED_OUT') {
+    document.getElementById('app').style.display = 'none';
+    document.getElementById('login-screen').style.display = 'flex';
+  }
+});
+
+function enterApp(email) {
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('header-email').textContent = email;
+  showTab('shows');
+}
+
+/* ─── TAB ROUTING ────────────────────────────────────────── */
+let activeTab = 'shows';
+
+function showTab(tab) {
+  activeTab = tab;
+  document.querySelectorAll('.tab-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.tab === tab);
+  });
+  const map = { shows: loadShows, shop: loadShop, releases: loadReleases, about: loadAbout, settings: loadSettings };
+  (map[tab] || (() => {}))();
+}
+
+/* ═══════════════════════════════════════════════════════════
+   SHOWS
+═══════════════════════════════════════════════════════════ */
+let showEditId = null;
+
+async function loadShows() {
+  const panel = document.getElementById('panel');
+  panel.innerHTML = `<div class="section-head"><h2 class="section-title">Shows</h2><button class="btn-outline" onclick="showShowForm(null)">+ Add show</button></div><div id="shows-form"></div><div id="shows-list"><p style="opacity:.3;font-size:12px">Loading…</p></div>`;
+  const { data, error } = await sb.from('shows').select('*').order('sort_order');
+  if (error) { document.getElementById('shows-list').innerHTML = `<p style="color:#e88a6a">${esc(error.message)}</p>`; return; }
+  renderShowsList(data || []);
+}
+
+function renderShowsList(shows) {
+  const el = document.getElementById('shows-list');
+  if (!shows.length) { el.innerHTML = `<p style="opacity:.3;font-size:12px">No shows yet.</p>`; return; }
+  el.innerHTML = `<table class="list-table">
+    <thead><tr><th>Date</th><th>City</th><th>Venue</th><th>Status</th><th></th></tr></thead>
+    <tbody>${shows.map(s => `<tr>
+      <td style="font-family:var(--fd);font-style:italic;font-size:17px">${esc(s.date)}</td>
+      <td>${esc(s.city)}</td>
+      <td style="opacity:.5">${esc(s.venue)}</td>
+      <td>${s.sold_out ? `<span class="badge badge-sold">Sold out</span>` : ''}</td>
+      <td><div class="td-actions">
+        <button class="btn-small" onclick='showShowForm(${JSON.stringify(s)})'>Edit</button>
+        <button class="btn-danger" onclick="deleteShow('${s.id}')">Delete</button>
+      </div></td>
+    </tr>`).join('')}</tbody>
+  </table>`;
+}
+
+function showShowForm(show) {
+  showEditId = show?.id || null;
+  document.getElementById('shows-form').innerHTML = `
+    <div class="edit-form">
+      <p class="edit-form-title">${show ? 'Edit show' : 'New show'}</p>
+      <div class="field-row">
+        <div class="field"><label>Date</label><input id="sf-date" value="${esc(show?.date||'')}" placeholder="18 Apr 2025"></div>
+        <div class="field"><label>City</label><input id="sf-city" value="${esc(show?.city||'')}"></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Venue</label><input id="sf-venue" value="${esc(show?.venue||'')}"></div>
+        <div class="field"><label>Ticket URL</label><input id="sf-url" value="${esc(show?.ticket_url||'')}"></div>
+      </div>
+      <div class="field-row">
+        <div class="field-check">
+          <input type="checkbox" id="sf-sold" ${show?.sold_out ? 'checked' : ''}>
+          <label for="sf-sold">Sold out</label>
+        </div>
+        <div class="field"><label>Sort order</label><input type="number" id="sf-sort" value="${show?.sort_order||0}" style="width:80px"></div>
+      </div>
+      <div class="btn-row">
+        <button class="btn-primary" onclick="saveShow()">Save show</button>
+        <button class="btn-outline" onclick="cancelShowForm()">Cancel</button>
+      </div>
+    </div>`;
+  document.getElementById('shows-form').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function cancelShowForm() { document.getElementById('shows-form').innerHTML = ''; showEditId = null; }
+
+async function saveShow() {
+  const payload = {
+    date:       document.getElementById('sf-date').value.trim(),
+    city:       document.getElementById('sf-city').value.trim(),
+    venue:      document.getElementById('sf-venue').value.trim(),
+    ticket_url: document.getElementById('sf-url').value.trim(),
+    sold_out:   document.getElementById('sf-sold').checked,
+    sort_order: parseInt(document.getElementById('sf-sort').value) || 0,
+  };
+  let error;
+  if (showEditId) {
+    ({ error } = await sb.from('shows').update(payload).eq('id', showEditId));
+  } else {
+    ({ error } = await sb.from('shows').insert(payload));
+  }
+  if (error) { toast('Error: ' + error.message); return; }
+  toast(showEditId ? 'Show updated' : 'Show added');
+  cancelShowForm();
+  loadShows();
+}
+
+async function deleteShow(id) {
+  if (!confirm('Delete this show?')) return;
+  const { error } = await sb.from('shows').delete().eq('id', id);
+  if (error) { toast('Error: ' + error.message); return; }
+  toast('Deleted');
+  loadShows();
+}
+
+/* ═══════════════════════════════════════════════════════════
+   SHOP
+═══════════════════════════════════════════════════════════ */
+let shopEditId = null;
+
+async function loadShop() {
+  const panel = document.getElementById('panel');
+  panel.innerHTML = `<div class="section-head"><h2 class="section-title">Shop</h2><button class="btn-outline" onclick="showProductForm(null)">+ Add product</button></div><div id="shop-form"></div><div id="shop-list"><p style="opacity:.3;font-size:12px">Loading…</p></div>`;
+  const { data, error } = await sb.from('products').select('*').order('sort_order');
+  if (error) { document.getElementById('shop-list').innerHTML = `<p style="color:#e88a6a">${esc(error.message)}</p>`; return; }
+  renderProductList(data || []);
+}
+
+function renderProductList(products) {
+  const el = document.getElementById('shop-list');
+  if (!products.length) { el.innerHTML = `<p style="opacity:.3;font-size:12px">No products yet.</p>`; return; }
+  el.innerHTML = `<table class="list-table">
+    <thead><tr><th>Name</th><th>Price</th><th>Badge</th><th>Status</th><th></th></tr></thead>
+    <tbody>${products.map(p => `<tr>
+      <td><div style="display:flex;align-items:center;gap:12px">
+        ${p.image_url ? `<div class="img-preview" style="width:40px;height:48px;flex-shrink:0"><img src="${esc(p.image_url)}"></div>` : ''}
+        <span style="font-family:var(--fd);font-style:italic;font-size:16px">${esc(p.name)}</span>
+      </div></td>
+      <td>£${esc(p.price)}</td>
+      <td style="opacity:.5;font-size:11px">${esc(p.badge||'')}</td>
+      <td>${p.sold_out ? `<span class="badge badge-sold">Sold out</span>` : p.active ? `<span class="badge badge-active">Active</span>` : `<span class="badge badge-inactive">Hidden</span>`}</td>
+      <td><div class="td-actions">
+        <button class="btn-small" onclick='showProductForm(${JSON.stringify(p).replace(/'/g,"&#39;")})'>Edit</button>
+        <button class="btn-danger" onclick="deleteProduct('${p.id}')">Delete</button>
+      </div></td>
+    </tr>`).join('')}</tbody>
+  </table>`;
+}
+
+function showProductForm(product) {
+  shopEditId = product?.id || null;
+  const sizes    = Array.isArray(product?.sizes)        ? product.sizes.join(', ')        : (product?.sizes || '');
+  const unavail  = Array.isArray(product?.unavail_sizes) ? product.unavail_sizes.join(', ') : (product?.unavail_sizes || '');
+  document.getElementById('shop-form').innerHTML = `
+    <div class="edit-form">
+      <p class="edit-form-title">${product ? 'Edit product' : 'New product'}</p>
+      <div class="field-row">
+        <div class="field"><label>Product name</label><input id="pf-name" value="${esc(product?.name||'')}"></div>
+        <div class="field"><label>Slug (URL key)</label><input id="pf-slug" value="${esc(product?.slug||'')}" placeholder="garden-tee"></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Price (£)</label><input type="number" id="pf-price" value="${esc(product?.price||'')}"></div>
+        <div class="field"><label>Badge label</label><input id="pf-badge" value="${esc(product?.badge||'')}" placeholder="New / Limited"></div>
+      </div>
+      <div class="field"><label>Description</label><input id="pf-desc" value="${esc(product?.description||'')}" placeholder="100% organic cotton"></div>
+      <div class="field"><label>Sizes (comma-separated)</label><input id="pf-sizes" value="${esc(sizes)}" placeholder="XS, S, M, L, XL, XXL"></div>
+      <div class="field"><label>Unavailable sizes (comma-separated)</label><input id="pf-unavail" value="${esc(unavail)}" placeholder="XS"></div>
+      <div class="img-upload-row" style="margin-bottom:20px">
+        ${imgPreviewHtml(product?.image_url, 'pf-preview')}
+        <div class="field"><label>Product image</label><input type="file" id="pf-img" accept="image/*" onchange="previewImg('pf-img','pf-preview')"></div>
+      </div>
+      <div class="field-row">
+        <div class="field-check"><input type="checkbox" id="pf-sold" ${product?.sold_out?'checked':''}><label for="pf-sold">Sold out</label></div>
+        <div class="field-check"><input type="checkbox" id="pf-active" ${product?.active!==false?'checked':''}><label for="pf-active">Active (visible on site)</label></div>
+        <div class="field"><label>Sort order</label><input type="number" id="pf-sort" value="${product?.sort_order||0}" style="width:80px"></div>
+      </div>
+      <div class="btn-row">
+        <button class="btn-primary" onclick="saveProduct('${esc(product?.image_url||'')}')">Save product</button>
+        <button class="btn-outline" onclick="cancelProductForm()">Cancel</button>
+      </div>
+    </div>`;
+  document.getElementById('shop-form').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function cancelProductForm() { document.getElementById('shop-form').innerHTML = ''; shopEditId = null; }
+
+function previewImg(inputId, previewId) {
+  const file = document.getElementById(inputId)?.files?.[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const el = document.getElementById(previewId);
+    if (el) el.innerHTML = `<img src="${e.target.result}">`;
+  };
+  reader.readAsDataURL(file);
+}
+
+async function saveProduct(existingImgUrl) {
+  const name   = document.getElementById('pf-name').value.trim();
+  const slug   = document.getElementById('pf-slug').value.trim();
+  const price  = parseFloat(document.getElementById('pf-price').value);
+  if (!name || !slug || isNaN(price)) { toast('Name, slug and price are required'); return; }
+
+  const sizesRaw   = document.getElementById('pf-sizes').value.split(',').map(s=>s.trim()).filter(Boolean);
+  const unavailRaw = document.getElementById('pf-unavail').value.split(',').map(s=>s.trim()).filter(Boolean);
+
+  let imageUrl = existingImgUrl;
+  const imgFile = document.getElementById('pf-img')?.files?.[0];
+  if (imgFile) {
+    try {
+      imageUrl = await uploadImage(imgFile, `products/${slug}-${Date.now()}`);
+    } catch (e) { toast('Image upload failed: ' + e.message); return; }
+  }
+
+  const payload = {
+    slug, name, price,
+    description:   document.getElementById('pf-desc').value.trim(),
+    badge:         document.getElementById('pf-badge').value.trim(),
+    image_url:     imageUrl,
+    sizes:         sizesRaw,
+    unavail_sizes: unavailRaw,
+    sold_out:      document.getElementById('pf-sold').checked,
+    active:        document.getElementById('pf-active').checked,
+    sort_order:    parseInt(document.getElementById('pf-sort').value) || 0,
+  };
+
+  let error;
+  if (shopEditId) {
+    ({ error } = await sb.from('products').update(payload).eq('id', shopEditId));
+  } else {
+    ({ error } = await sb.from('products').insert(payload));
+  }
+  if (error) { toast('Error: ' + error.message); return; }
+  toast(shopEditId ? 'Product updated' : 'Product added');
+  cancelProductForm();
+  loadShop();
+}
+
+async function deleteProduct(id) {
+  if (!confirm('Delete this product?')) return;
+  const { error } = await sb.from('products').delete().eq('id', id);
+  if (error) { toast('Error: ' + error.message); return; }
+  toast('Deleted');
+  loadShop();
+}
+
+/* ═══════════════════════════════════════════════════════════
+   RELEASES
+═══════════════════════════════════════════════════════════ */
+let relEditId = null;
+
+async function loadReleases() {
+  const panel = document.getElementById('panel');
+  panel.innerHTML = `<div class="section-head"><h2 class="section-title">Releases</h2><button class="btn-outline" onclick="showReleaseForm(null)">+ Add release</button></div><div id="rel-form"></div><div id="rel-list"><p style="opacity:.3;font-size:12px">Loading…</p></div>`;
+  const { data, error } = await sb.from('releases')
+    .select('*, release_quotes(*), release_tracks(*)')
+    .order('sort_order');
+  if (error) { document.getElementById('rel-list').innerHTML = `<p style="color:#e88a6a">${esc(error.message)}</p>`; return; }
+  renderReleaseList(data || []);
+}
+
+function renderReleaseList(releases) {
+  const el = document.getElementById('rel-list');
+  if (!releases.length) { el.innerHTML = `<p style="opacity:.3;font-size:12px">No releases yet.</p>`; return; }
+  el.innerHTML = releases.map(r => `
+    <div style="border:0.5px solid var(--border);border-radius:6px;padding:20px 24px;margin-bottom:16px">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px">
+        <div style="display:flex;gap:16px;align-items:flex-start">
+          ${r.cover_art_url ? `<div class="img-preview" style="flex-shrink:0"><img src="${esc(r.cover_art_url)}"></div>` : ''}
+          <div>
+            <p style="font-family:var(--fd);font-style:italic;font-size:20px;margin-bottom:2px">${esc(r.title)}</p>
+            <p style="font-size:10px;opacity:.4;letter-spacing:0.08em">${esc(r.year)} · ${esc(r.type||'')}</p>
+            <p style="font-size:11px;opacity:.35;margin-top:6px">${(r.release_quotes||[]).length} quote${(r.release_quotes||[]).length!==1?'s':''} · ${(r.release_tracks||[]).length} track${(r.release_tracks||[]).length!==1?'s':''}</p>
+          </div>
+        </div>
+        <div class="td-actions">
+          <button class="btn-small" onclick='showReleaseForm(${JSON.stringify({...r, release_quotes:undefined, release_tracks:undefined}).replace(/'/g,"&#39;")})'>Edit</button>
+          <button class="btn-danger" onclick="deleteRelease('${r.id}')">Delete</button>
+        </div>
+      </div>
+      <hr class="divider" style="margin:16px 0">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
+        <div>
+          <p class="sub-title">Quotes</p>
+          <div id="quotes-${r.id}">
+            ${(r.release_quotes||[]).sort((a,b)=>(a.sort_order||0)-(b.sort_order||0)).map(q=>
+              `<div class="sub-item">
+                <div class="sub-item-main">
+                  <span class="sub-item-label" style="font-size:13px;font-style:italic">"${esc(q.quote.substring(0,60))}${q.quote.length>60?'…':''}"</span>
+                  <span class="sub-item-meta">— ${esc(q.source)}</span>
+                </div>
+                <button class="btn-danger" onclick="deleteQuote('${q.id}','${r.id}')">×</button>
+              </div>`).join('')}
+          </div>
+          <div style="margin-top:12px">
+            <input id="nq-quote-${r.id}" placeholder="Quote text" style="width:100%;background:transparent;border:none;border-bottom:0.5px solid var(--border);padding:8px 0;font-family:var(--fu);font-size:12px;color:var(--cream);outline:none;margin-bottom:8px">
+            <div style="display:flex;gap:8px">
+              <input id="nq-src-${r.id}" placeholder="Source" style="flex:1;background:transparent;border:none;border-bottom:0.5px solid var(--border);padding:8px 0;font-family:var(--fu);font-size:12px;color:var(--cream);outline:none">
+              <button class="btn-small" onclick="addQuote('${r.id}')">Add</button>
+            </div>
+          </div>
+        </div>
+        <div>
+          <p class="sub-title">Tracks</p>
+          <div id="tracks-${r.id}">
+            ${(r.release_tracks||[]).sort((a,b)=>(a.sort_order||0)-(b.sort_order||0)).map((t,i)=>
+              `<div class="sub-item">
+                <div class="sub-item-main">
+                  <span class="sub-item-label">${esc(t.name)}</span>
+                  ${t.feat ? `<span class="sub-item-meta">feat. ${esc(t.feat)}</span>` : ''}
+                </div>
+                <button class="btn-danger" onclick="deleteTrack('${t.id}','${r.id}')">×</button>
+              </div>`).join('')}
+          </div>
+          <div style="margin-top:12px;display:flex;flex-direction:column;gap:8px">
+            <input id="nt-name-${r.id}" placeholder="Track name" style="width:100%;background:transparent;border:none;border-bottom:0.5px solid var(--border);padding:8px 0;font-family:var(--fu);font-size:12px;color:var(--cream);outline:none">
+            <input id="nt-feat-${r.id}" placeholder="feat. (optional)" style="width:100%;background:transparent;border:none;border-bottom:0.5px solid var(--border);padding:8px 0;font-family:var(--fu);font-size:12px;color:var(--cream);outline:none">
+            <div style="display:flex;gap:8px">
+              <input id="nt-url-${r.id}" placeholder="Stream URL" style="flex:1;background:transparent;border:none;border-bottom:0.5px solid var(--border);padding:8px 0;font-family:var(--fu);font-size:12px;color:var(--cream);outline:none">
+              <button class="btn-small" onclick="addTrack('${r.id}')">Add</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <hr class="divider" style="margin:12px 0">
+      <div>
+        <p class="sub-title">Videos</p>
+        <div id="videos-${r.id}">${renderVideosList(r.videos||[], r.id)}</div>
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <input id="nv-title-${r.id}" placeholder="Title" style="width:120px;background:transparent;border:none;border-bottom:0.5px solid var(--border);padding:8px 0;font-family:var(--fu);font-size:12px;color:var(--cream);outline:none">
+          <input id="nv-url-${r.id}" placeholder="YouTube or video URL" style="flex:1;background:transparent;border:none;border-bottom:0.5px solid var(--border);padding:8px 0;font-family:var(--fu);font-size:12px;color:var(--cream);outline:none">
+          <button class="btn-small" onclick="addVideo('${r.id}')">Add</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function renderVideosList(videos, releaseId) {
+  if (!videos.length) return `<p style="font-size:11px;opacity:.25">No videos yet</p>`;
+  return videos.map((v, i) => `
+    <div class="sub-item">
+      <div class="sub-item-main">
+        <span class="sub-item-label">${esc(v.title)}</span>
+        <span class="sub-item-meta" style="word-break:break-all">${esc(v.url)}</span>
+      </div>
+      <button class="btn-danger" onclick="removeVideo('${releaseId}',${i})">×</button>
+    </div>`).join('');
+}
+
+async function addVideo(releaseId) {
+  const title = document.getElementById(`nv-title-${releaseId}`).value.trim();
+  const url   = document.getElementById(`nv-url-${releaseId}`).value.trim();
+  if (!title || !url) { toast('Title and URL required'); return; }
+  const { data: rel } = await sb.from('releases').select('videos').eq('id', releaseId).single();
+  const videos = [...(Array.isArray(rel?.videos) ? rel.videos : []), { title, url }];
+  const { error } = await sb.from('releases').update({ videos }).eq('id', releaseId);
+  if (error) { toast('Error: ' + error.message); return; }
+  document.getElementById(`nv-title-${releaseId}`).value = '';
+  document.getElementById(`nv-url-${releaseId}`).value = '';
+  document.getElementById(`videos-${releaseId}`).innerHTML = renderVideosList(videos, releaseId);
+  toast('Video added');
+}
+
+async function removeVideo(releaseId, idx) {
+  const { data: rel } = await sb.from('releases').select('videos').eq('id', releaseId).single();
+  const videos = (rel?.videos || []).filter((_,i) => i !== idx);
+  const { error } = await sb.from('releases').update({ videos }).eq('id', releaseId);
+  if (error) { toast('Error: ' + error.message); return; }
+  document.getElementById(`videos-${releaseId}`).innerHTML = renderVideosList(videos, releaseId);
+  toast('Deleted');
+}
+
+const ODESLI_LABELS = {
+  spotify: 'Spotify', appleMusic: 'Apple Music', soundcloud: 'SoundCloud',
+  bandcamp: 'Bandcamp', youtube: 'YouTube', youtubeMusic: 'YouTube Music',
+  tidal: 'Tidal', amazon: 'Amazon Music', deezer: 'Deezer', itunes: 'iTunes',
+  napster: 'Napster', pandora: 'Pandora',
+};
+
+function showReleaseForm(release) {
+  relEditId = release?.id || null;
+  window._releaseLinks = Array.isArray(release?.platform_links) ? [...release.platform_links] : [];
+  document.getElementById('rel-form').innerHTML = `
+    <div class="edit-form">
+      <p class="edit-form-title">${release ? 'Edit release' : 'New release'}</p>
+      <div class="field-row">
+        <div class="field"><label>Title</label><input id="rf-title" value="${esc(release?.title||'')}"></div>
+        <div class="field"><label>Year</label><input id="rf-year" value="${esc(release?.year||'')}" placeholder="2025"></div>
+      </div>
+      <div class="field"><label>Type</label><input id="rf-type" value="${esc(release?.type||'')}" placeholder="Album / EP / Single"></div>
+      <div class="field"><label>Description</label><textarea id="rf-desc">${esc(release?.description||'')}</textarea></div>
+
+      <div style="margin-bottom:24px">
+        <p style="font-size:8px;letter-spacing:.18em;text-transform:uppercase;color:var(--cream);opacity:.4;margin-bottom:10px">Streaming links</p>
+        <div id="rf-links-list">${renderLinksList()}</div>
+
+        <div style="margin-top:16px;padding:16px;background:var(--bg3);border-radius:4px">
+          <p style="font-size:8px;letter-spacing:.16em;text-transform:uppercase;opacity:.3;margin-bottom:10px">Auto-fetch — paste any streaming URL</p>
+          <div style="display:flex;gap:8px">
+            <input id="rf-lookup" placeholder="Spotify, Bandcamp, Apple Music… any link works" style="flex:1;background:transparent;border:none;border-bottom:0.5px solid var(--border);padding:8px 0;font-family:var(--fu);font-size:13px;color:var(--cream);outline:none">
+            <button class="btn-small" id="rf-fetch-btn" onclick="fetchOdesliLinks()">Fetch</button>
+          </div>
+          <div id="rf-fetch-result"></div>
+        </div>
+
+        <div style="margin-top:12px;display:flex;gap:8px;align-items:flex-end">
+          <input id="rf-manual-platform" placeholder="Platform name" style="width:120px;background:transparent;border:none;border-bottom:0.5px solid var(--border);padding:8px 0;font-family:var(--fu);font-size:13px;color:var(--cream);outline:none">
+          <input id="rf-manual-url" placeholder="URL" style="flex:1;background:transparent;border:none;border-bottom:0.5px solid var(--border);padding:8px 0;font-family:var(--fu);font-size:13px;color:var(--cream);outline:none">
+          <button class="btn-small" onclick="addManualLink()">Add manually</button>
+        </div>
+      </div>
+
+      <div class="img-upload-row" style="margin-bottom:20px">
+        ${imgPreviewHtml(release?.cover_art_url, 'rf-preview')}
+        <div class="field"><label>Cover art</label><input type="file" id="rf-img" accept="image/*" onchange="previewImg('rf-img','rf-preview')"></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Sort order</label><input type="number" id="rf-sort" value="${release?.sort_order||0}" style="width:80px"></div>
+        <div class="field-check" style="padding-top:20px">
+          <input type="checkbox" id="rf-visible" ${release?.visible !== false ? 'checked' : ''}>
+          <label for="rf-visible">Visible on site</label>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn-primary" onclick="saveRelease('${esc(release?.cover_art_url||'')}')">Save release</button>
+        <button class="btn-outline" onclick="cancelReleaseForm()">Cancel</button>
+      </div>
+    </div>`;
+  document.getElementById('rel-form').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function renderLinksList() {
+  const links = window._releaseLinks || [];
+  if (!links.length) return `<p style="font-size:11px;opacity:.25;padding:4px 0">No links yet — fetch or add manually below</p>`;
+  return links.map((l, i) => `
+    <div style="display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:0.5px solid rgba(232,224,204,0.05)">
+      <span style="font-size:13px;min-width:110px">${esc(l.platform)}</span>
+      <span style="font-size:11px;opacity:.3;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(l.url)}</span>
+      <button class="btn-danger" onclick="removeReleaseLink(${i})">×</button>
+    </div>`).join('');
+}
+
+function refreshLinksList() {
+  const el = document.getElementById('rf-links-list');
+  if (el) el.innerHTML = renderLinksList();
+}
+
+function removeReleaseLink(idx) {
+  window._releaseLinks.splice(idx, 1);
+  refreshLinksList();
+}
+
+function addManualLink() {
+  const platform = document.getElementById('rf-manual-platform').value.trim();
+  const url      = document.getElementById('rf-manual-url').value.trim();
+  if (!platform || !url) { toast('Platform name and URL required'); return; }
+  if (!window._releaseLinks) window._releaseLinks = [];
+  window._releaseLinks.push({ platform, url });
+  document.getElementById('rf-manual-platform').value = '';
+  document.getElementById('rf-manual-url').value = '';
+  refreshLinksList();
+}
+
+async function fetchOdesliLinks() {
+  const url = document.getElementById('rf-lookup').value.trim();
+  if (!url) { toast('Paste a streaming URL first'); return; }
+  const btn = document.getElementById('rf-fetch-btn');
+  btn.textContent = '…'; btn.disabled = true;
+  try {
+    const res = await fetch(`https://api.song.link/v1-alpha.1/links?url=${encodeURIComponent(url)}`);
+    if (!res.ok) throw new Error('Not found');
+    const data = await res.json();
+    const found = Object.entries(data.linksByPlatform || {})
+      .filter(([k]) => ODESLI_LABELS[k])
+      .map(([k, v]) => ({ platform: ODESLI_LABELS[k], url: v.url }));
+    if (!found.length) { toast('No platforms found'); return; }
+    const existing = (window._releaseLinks || []).map(l => l.platform.toLowerCase());
+    const newOnes  = found.filter(l => !existing.includes(l.platform.toLowerCase()));
+    const dupes    = found.filter(l =>  existing.includes(l.platform.toLowerCase()));
+    let html = '';
+    if (dupes.length) html += `<p style="font-size:10px;opacity:.3;margin-top:8px">${dupes.map(l=>l.platform).join(', ')} already added</p>`;
+    if (newOnes.length) {
+      const encoded = esc(JSON.stringify(newOnes));
+      html += `<div style="margin-top:10px">
+        ${newOnes.map((l, i) => `
+          <label style="display:flex;align-items:center;gap:8px;padding:5px 0;cursor:pointer;font-size:12px">
+            <input type="checkbox" checked data-odesli-idx="${i}" style="accent-color:var(--cream)">
+            <span style="min-width:110px">${esc(l.platform)}</span>
+            <span style="opacity:.3;font-size:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(l.url)}</span>
+          </label>`).join('')}
+        <button class="btn-small" style="margin-top:10px" onclick="applyOdesliLinks(${encoded})">Add selected</button>
+      </div>`;
+    } else if (!dupes.length) {
+      html = `<p style="font-size:10px;opacity:.3;margin-top:8px">No new platforms found</p>`;
+    }
+    document.getElementById('rf-fetch-result').innerHTML = html;
+  } catch {
+    toast('Could not fetch — check the URL');
+  } finally {
+    btn.textContent = 'Fetch'; btn.disabled = false;
+  }
+}
+
+function applyOdesliLinks(links) {
+  if (typeof links === 'string') links = JSON.parse(links);
+  const checkboxes = document.querySelectorAll('[data-odesli-idx]');
+  if (!window._releaseLinks) window._releaseLinks = [];
+  checkboxes.forEach(cb => {
+    if (cb.checked) {
+      const l = links[parseInt(cb.dataset.odesliIdx)];
+      if (l) window._releaseLinks.push(l);
+    }
+  });
+  document.getElementById('rf-fetch-result').innerHTML = `<p style="font-size:10px;opacity:.4;margin-top:8px">Added ✓</p>`;
+  document.getElementById('rf-lookup').value = '';
+  refreshLinksList();
+}
+
+function cancelReleaseForm() {
+  document.getElementById('rel-form').innerHTML = '';
+  relEditId = null;
+  window._releaseLinks = null;
+}
+
+async function saveRelease(existingArtUrl) {
+  const title = document.getElementById('rf-title').value.trim();
+  const year  = document.getElementById('rf-year').value.trim();
+  if (!title || !year) { toast('Title and year are required'); return; }
+
+  let coverArtUrl = existingArtUrl;
+  const imgFile = document.getElementById('rf-img')?.files?.[0];
+  if (imgFile) {
+    try {
+      coverArtUrl = await uploadImage(imgFile, `releases/${title.toLowerCase().replace(/\s+/g,'-')}-${Date.now()}`);
+    } catch (e) { toast('Image upload failed: ' + e.message); return; }
+  }
+
+  const platformLinks = window._releaseLinks || [];
+  const spotifyLink   = platformLinks.find(l => l.platform === 'Spotify');
+  const bandcampLink  = platformLinks.find(l => l.platform === 'Bandcamp');
+
+  const payload = {
+    title, year,
+    type:           document.getElementById('rf-type').value.trim(),
+    description:    document.getElementById('rf-desc').value.trim(),
+    platform_links: platformLinks,
+    spotify_url:    spotifyLink?.url  || '',
+    bandcamp_url:   bandcampLink?.url || '',
+    cover_art_url:  coverArtUrl,
+    sort_order:     parseInt(document.getElementById('rf-sort').value) || 0,
+    visible:        document.getElementById('rf-visible').checked,
+  };
+
+  let error;
+  if (relEditId) {
+    ({ error } = await sb.from('releases').update(payload).eq('id', relEditId));
+  } else {
+    ({ error } = await sb.from('releases').insert(payload));
+  }
+  if (error) { toast('Error: ' + error.message); return; }
+  toast(relEditId ? 'Release updated' : 'Release added');
+  cancelReleaseForm();
+  loadReleases();
+}
+
+async function deleteRelease(id) {
+  if (!confirm('Delete this release and all its tracks and quotes?')) return;
+  const { error } = await sb.from('releases').delete().eq('id', id);
+  if (error) { toast('Error: ' + error.message); return; }
+  toast('Deleted');
+  loadReleases();
+}
+
+async function addQuote(releaseId) {
+  const quote  = document.getElementById(`nq-quote-${releaseId}`).value.trim();
+  const source = document.getElementById(`nq-src-${releaseId}`).value.trim();
+  if (!quote || !source) { toast('Quote and source required'); return; }
+  const { error } = await sb.from('release_quotes').insert({ release_id: releaseId, quote, source });
+  if (error) { toast('Error: ' + error.message); return; }
+  document.getElementById(`nq-quote-${releaseId}`).value = '';
+  document.getElementById(`nq-src-${releaseId}`).value = '';
+  toast('Quote added');
+  refreshReleaseSubitems(releaseId);
+}
+
+async function deleteQuote(quoteId, releaseId) {
+  const { error } = await sb.from('release_quotes').delete().eq('id', quoteId);
+  if (error) { toast('Error: ' + error.message); return; }
+  toast('Deleted');
+  refreshReleaseSubitems(releaseId);
+}
+
+async function addTrack(releaseId) {
+  const name      = document.getElementById(`nt-name-${releaseId}`).value.trim();
+  const feat      = document.getElementById(`nt-feat-${releaseId}`).value.trim();
+  const streamUrl = document.getElementById(`nt-url-${releaseId}`).value.trim();
+  if (!name || !streamUrl) { toast('Track name and URL required'); return; }
+  const { error } = await sb.from('release_tracks').insert({ release_id: releaseId, name, feat: feat||null, stream_url: streamUrl });
+  if (error) { toast('Error: ' + error.message); return; }
+  document.getElementById(`nt-name-${releaseId}`).value = '';
+  document.getElementById(`nt-feat-${releaseId}`).value = '';
+  document.getElementById(`nt-url-${releaseId}`).value = '';
+  toast('Track added');
+  refreshReleaseSubitems(releaseId);
+}
+
+async function deleteTrack(trackId, releaseId) {
+  const { error } = await sb.from('release_tracks').delete().eq('id', trackId);
+  if (error) { toast('Error: ' + error.message); return; }
+  toast('Deleted');
+  refreshReleaseSubitems(releaseId);
+}
+
+async function refreshReleaseSubitems(releaseId) {
+  const { data } = await sb.from('releases')
+    .select('*, release_quotes(*), release_tracks(*)')
+    .eq('id', releaseId)
+    .single();
+  if (!data) return;
+  const qtEl = document.getElementById(`quotes-${releaseId}`);
+  const trEl = document.getElementById(`tracks-${releaseId}`);
+  if (qtEl) qtEl.innerHTML = (data.release_quotes||[]).sort((a,b)=>(a.sort_order||0)-(b.sort_order||0)).map(q=>
+    `<div class="sub-item">
+      <div class="sub-item-main">
+        <span class="sub-item-label" style="font-size:13px;font-style:italic">"${esc(q.quote.substring(0,60))}${q.quote.length>60?'…':''}"</span>
+        <span class="sub-item-meta">— ${esc(q.source)}</span>
+      </div>
+      <button class="btn-danger" onclick="deleteQuote('${q.id}','${releaseId}')">×</button>
+    </div>`).join('');
+  if (trEl) trEl.innerHTML = (data.release_tracks||[]).sort((a,b)=>(a.sort_order||0)-(b.sort_order||0)).map(t=>
+    `<div class="sub-item">
+      <div class="sub-item-main">
+        <span class="sub-item-label">${esc(t.name)}</span>
+        ${t.feat ? `<span class="sub-item-meta">feat. ${esc(t.feat)}</span>` : ''}
+      </div>
+      <button class="btn-danger" onclick="deleteTrack('${t.id}','${releaseId}')">×</button>
+    </div>`).join('');
+}
+
+/* ═══════════════════════════════════════════════════════════
+   ABOUT
+═══════════════════════════════════════════════════════════ */
+let aboutId = null;
+
+async function loadAbout() {
+  const panel = document.getElementById('panel');
+  panel.innerHTML = `<div class="section-head"><h2 class="section-title">About</h2></div><div id="about-content"><p style="opacity:.3;font-size:12px">Loading…</p></div>`;
+  const { data } = await sb.from('about').select('*').limit(1).single();
+  aboutId = data?.id || null;
+  renderAboutForm(data);
+}
+
+function renderAboutForm(d) {
+  const press = Array.isArray(d?.press_names) ? d.press_names.join('\n') : (d?.press_names||'');
+  const ach   = Array.isArray(d?.achievements) ? d.achievements.join('\n') : (d?.achievements||'');
+  document.getElementById('about-content').innerHTML = `
+    <div class="edit-form" style="background:transparent;border:none;padding:0">
+      <div class="img-upload-row" style="margin-bottom:28px">
+        ${imgPreviewHtml(d?.portrait_url, 'ab-preview')}
+        <div class="field"><label>Portrait photo</label><input type="file" id="ab-img" accept="image/*" onchange="previewImg('ab-img','ab-preview')"></div>
+      </div>
+      <div class="field"><label>Featured quote</label><textarea id="ab-quote" style="min-height:60px">${esc(d?.quote||'')}</textarea></div>
+      <div class="field"><label>Quote source</label><input id="ab-qsrc" value="${esc(d?.quote_source||'')}"></div>
+      <div class="field"><label>Bio</label><textarea id="ab-bio" style="min-height:180px">${esc(d?.bio||'')}</textarea></div>
+      <div class="field-row">
+        <div class="field"><label>Press names (one per line)</label><textarea id="ab-press" style="min-height:120px">${esc(press)}</textarea></div>
+        <div class="field"><label>Achievements (one per line)</label><textarea id="ab-ach" style="min-height:120px">${esc(ach)}</textarea></div>
+      </div>
+      <div class="field"><label>Contact / booking email</label><input id="ab-email" value="${esc(d?.contact_email||'mgmt.mfn@gmail.com')}"></div>
+      <div class="btn-row">
+        <button class="btn-primary" onclick="saveAbout('${esc(d?.portrait_url||'')}')">Save about</button>
+      </div>
+    </div>`;
+}
+
+async function saveAbout(existingPortraitUrl) {
+  let portraitUrl = existingPortraitUrl;
+  const imgFile = document.getElementById('ab-img')?.files?.[0];
+  if (imgFile) {
+    try {
+      portraitUrl = await uploadImage(imgFile, `about/portrait-${Date.now()}`);
+    } catch (e) { toast('Image upload failed: ' + e.message); return; }
+  }
+
+  const pressNames  = document.getElementById('ab-press').value.split('\n').map(s=>s.trim()).filter(Boolean);
+  const achievements = document.getElementById('ab-ach').value.split('\n').map(s=>s.trim()).filter(Boolean);
+
+  const payload = {
+    quote:         document.getElementById('ab-quote').value.trim(),
+    quote_source:  document.getElementById('ab-qsrc').value.trim(),
+    bio:           document.getElementById('ab-bio').value.trim(),
+    portrait_url:  portraitUrl,
+    contact_email: document.getElementById('ab-email').value.trim(),
+    press_names:   pressNames,
+    achievements,
+    updated_at:    new Date().toISOString(),
+  };
+
+  let error;
+  if (aboutId) {
+    ({ error } = await sb.from('about').update(payload).eq('id', aboutId));
+  } else {
+    ({ error } = await sb.from('about').insert(payload));
+  }
+  if (error) { toast('Error: ' + error.message); return; }
+  toast('About saved');
+  loadAbout();
+}
+
+/* ═══════════════════════════════════════════════════════════
+   SETTINGS
+═══════════════════════════════════════════════════════════ */
+async function loadSettings() {
+  const panel = document.getElementById('panel');
+  panel.innerHTML = `<div class="section-head"><h2 class="section-title">Settings</h2></div><div id="settings-content"><p style="opacity:.3;font-size:12px">Loading…</p></div>`;
+
+  const [setRes, stmRes] = await Promise.all([
+    sb.from('settings').select('key, value'),
+    sb.from('stream_links').select('*').order('sort_order'),
+  ]);
+
+  const get = (key) => (setRes.data||[]).find(s=>s.key===key)?.value||'';
+  const links = stmRes.data || [];
+
+  document.getElementById('settings-content').innerHTML = `
+    <div class="edit-form" style="background:transparent;border:none;padding:0;max-width:520px">
+      <div class="field"><label>Booking email</label><input id="st-booking" value="${esc(get('booking_email'))}"></div>
+      <div class="btn-row" style="margin-bottom:40px">
+        <button class="btn-primary" onclick="saveSettings()">Save settings</button>
+      </div>
+    </div>
+    <hr class="divider">
+    <h3 style="font-family:var(--fd);font-style:italic;font-size:22px;margin-bottom:24px">Stream links</h3>
+    <div id="stream-links-list" style="max-width:520px">
+      ${links.map(l => `
+        <div class="sub-item" id="stl-${l.id}">
+          <div class="sub-item-main">
+            <span class="sub-item-label">${esc(l.platform)}</span>
+            <span class="sub-item-meta" style="word-break:break-all">${esc(l.url)}</span>
+          </div>
+          <button class="btn-danger" onclick="deleteStreamLink('${l.id}')">Delete</button>
+        </div>`).join('')}
+    </div>
+    <div style="margin-top:20px;max-width:520px">
+      <div class="field-row">
+        <div class="field"><label>Platform name</label><input id="stl-platform" placeholder="Spotify"></div>
+        <div class="field"><label>URL</label><input id="stl-url" placeholder="https://…"></div>
+      </div>
+      <button class="btn-outline" onclick="addStreamLink()">+ Add link</button>
+    </div>`;
+}
+
+async function saveSettings() {
+  const bookingEmail = document.getElementById('st-booking').value.trim();
+  const { error } = await sb.from('settings').upsert({ key: 'booking_email', value: bookingEmail });
+  if (error) { toast('Error: ' + error.message); return; }
+  toast('Settings saved');
+}
+
+async function addStreamLink() {
+  const platform = document.getElementById('stl-platform').value.trim();
+  const url      = document.getElementById('stl-url').value.trim();
+  if (!platform || !url) { toast('Platform and URL required'); return; }
+  const { error } = await sb.from('stream_links').insert({ platform, url });
+  if (error) { toast('Error: ' + error.message); return; }
+  document.getElementById('stl-platform').value = '';
+  document.getElementById('stl-url').value = '';
+  toast('Link added');
+  loadSettings();
+}
+
+async function deleteStreamLink(id) {
+  const { error } = await sb.from('stream_links').delete().eq('id', id);
+  if (error) { toast('Error: ' + error.message); return; }
+  toast('Deleted');
+  loadSettings();
+}
+
+/* ─── BOOT ───────────────────────────────────────────────── */
+init();
+</script>
+</body>
+</html>
