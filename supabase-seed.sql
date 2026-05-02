@@ -83,19 +83,23 @@ begin
     (ew_id, 'Zombie Flower', 'Single',     'https://maufromnowhere.bandcamp.com/track/zombie-flower', 2),
     (ew_id, 'Try',           'Single',     'https://maufromnowhere.bandcamp.com/track/try',           3);
 
-  -- ABOUT ---------------------------------------------------
-  if (select count(*) from about) = 0 then
-    insert into about (bio, quote, quote_source, portrait_url, contact_email, achievements, press_names) values (
-      'mau from nowhere blends hip-hop, R&B, and electronic textures into a soulful, genre-bending sound shaped between Nairobi, the UK, and the Netherlands. His music is both urgent and meditative — weaving melodic raps with reflective songwriting, drawing comparisons to Obongjayar, Noname, and Yinka Bernie, with influences spanning Outkast to Bloc Party.
+end $seed$;
+
+-- ─── ABOUT ────────────────────────────────────────────────
+-- Runs independently so it works even if releases were already seeded.
+do $about$
+begin
+  if (select count(*) from about) > 0 then return; end if;
+
+  insert into about (bio, quote, quote_source, portrait_url, contact_email, achievements, press_names) values (
+    'mau from nowhere blends hip-hop, R&B, and electronic textures into a soulful, genre-bending sound shaped between Nairobi, the UK, and the Netherlands. His music is both urgent and meditative — weaving melodic raps with reflective songwriting, drawing comparisons to Obongjayar, Noname, and Yinka Bernie, with influences spanning Outkast to Bloc Party.
 
 Born Kamau Wainaina in Nairobi, raised between Kenya, the UK and the Netherlands, mau''s music reflects a life spent oscillating between worlds — never quite staying in one place, finding comfort instead in the clarity of his craft. His 2025 collaborative album PRESSURE with producer hihi earned global attention from OkayAfrica, Dead Good Music, and 24 Hip-Hop. His 2024 EP SOFT STEPS was praised by CLASH, Atwood Magazine, and 1883. Named Apple Music''s East African Up Next Artist (May 2023) and spotlighted on COLORS.',
-      'mau from nowhere has the innate ability to make you feel seen and validated through his vulnerability. He lets you in and in doing so creates an environment that is real and non-judgmental.',
-      'Tangaza Magazine',
-      'Brand Assets/MFN graded/DSCF3822.jpg',
-      'mgmt.mfn@gmail.com',
-      '["Apple Music Up Next Artist — May 2023","PRESSURE (2025) with hihi — global press attention across four continents","Known for intimate yet powerful live performances — from Nairobi club floors to festival stages across the UK and Europe"]'::jsonb,
-      '["OkayAfrica","CLASH","1883 Magazine","Atwood Magazine","Wordplay Magazine","Music Crowns","Rotate Magazine","24 Hip-Hop","Kilele Magazine","Tangaza Magazine","Dead Good Music","Forbes","Mixtape Madness","PAM"]'::jsonb
-    );
-  end if;
-
-end $seed$;
+    'mau from nowhere has the innate ability to make you feel seen and validated through his vulnerability. He lets you in and in doing so creates an environment that is real and non-judgmental.',
+    'Tangaza Magazine',
+    'Brand Assets/MFN graded/DSCF3822.jpg',
+    'mgmt.mfn@gmail.com',
+    '["Apple Music Up Next Artist — May 2023","PRESSURE (2025) with hihi — global press attention across four continents","Known for intimate yet powerful live performances — from Nairobi club floors to festival stages across the UK and Europe"]'::jsonb,
+    '["OkayAfrica","CLASH","1883 Magazine","Atwood Magazine","Wordplay Magazine","Music Crowns","Rotate Magazine","24 Hip-Hop","Kilele Magazine","Tangaza Magazine","Dead Good Music","Forbes","Mixtape Madness","PAM"]'::jsonb
+  );
+end $about$;
