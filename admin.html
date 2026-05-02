@@ -482,7 +482,7 @@ let shopEditId = null;
 
 async function loadShop() {
   const panel = document.getElementById('panel');
-  panel.innerHTML = `<div class="section-head"><h2 class="section-title">Shop</h2><button class="btn-outline" onclick="showProductForm(null)">+ Add product</button></div><div id="shop-form"></div><div id="shop-list"><p style="opacity:.3;font-size:12px">Loading…</p></div>`;
+  panel.innerHTML = `<div class="section-head"><h2 class="section-title">Shop</h2><div style="display:flex;gap:8px"><button class="btn-outline" onclick="syncFromStripe()">↓ Sync from Stripe</button><button class="btn-outline" onclick="showProductForm(null)">+ Add product</button></div></div><div id="shop-form"></div><div id="shop-list"><p style="opacity:.3;font-size:12px">Loading…</p></div>`;
   const { data, error } = await sb.from('products').select('*').order('sort_order');
   if (error) { document.getElementById('shop-list').innerHTML = `<p style="color:#e88a6a">${esc(error.message)}</p>`; return; }
   renderProductList(data || []);
@@ -525,7 +525,9 @@ function showProductForm(product) {
         <div class="field"><label>Badge label</label><input id="pf-badge" value="${esc(product?.badge||'')}" placeholder="New / Limited"></div>
       </div>
       <div class="field"><label>Description</label><input id="pf-desc" value="${esc(product?.description||'')}" placeholder="100% organic cotton"></div>
+      <div class="field"><label>Stripe Payment Link URL</label><input id="pf-paylink" value="${esc(product?.payment_link_url||'')}" placeholder="https://buy.stripe.com/…"></div>
       <div class="field"><label>Sizes (comma-separated)</label><input id="pf-sizes" value="${esc(sizes)}" placeholder="XS, S, M, L, XL, XXL"></div>
+      <div class="field"><label>Colours (comma-separated)</label><input id="pf-colors" value="${esc(Array.isArray(product?.colors) ? product.colors.join(', ') : (product?.colors||''))}" placeholder="Black, White, Forest"></div>
       <div class="field"><label>Unavailable sizes (comma-separated)</label><input id="pf-unavail" value="${esc(unavail)}" placeholder="XS"></div>
       <div class="img-upload-row" style="margin-bottom:20px">
         ${imgPreviewHtml(product?.image_url, 'pf-preview')}
@@ -563,8 +565,10 @@ async function saveProduct(existingImgUrl) {
   const price  = parseFloat(document.getElementById('pf-price').value);
   if (!name || !slug || isNaN(price)) { toast('Name, slug and price are required'); return; }
 
-  const sizesRaw   = document.getElementById('pf-sizes').value.split(',').map(s=>s.trim()).filter(Boolean);
-  const unavailRaw = document.getElementById('pf-unavail').value.split(',').map(s=>s.trim()).filter(Boolean);
+  const sizesRaw    = document.getElementById('pf-sizes').value.split(',').map(s=>s.trim()).filter(Boolean);
+  const unavailRaw  = document.getElementById('pf-unavail').value.split(',').map(s=>s.trim()).filter(Boolean);
+  const colorsRaw   = document.getElementById('pf-colors').value.split(',').map(s=>s.trim()).filter(Boolean);
+  const payLinkUrl  = document.getElementById('pf-paylink').value.trim();
 
   let imageUrl = existingImgUrl;
   const imgFile = document.getElementById('pf-img')?.files?.[0];
@@ -579,8 +583,10 @@ async function saveProduct(existingImgUrl) {
     description:   document.getElementById('pf-desc').value.trim(),
     badge:         document.getElementById('pf-badge').value.trim(),
     image_url:     imageUrl,
-    sizes:         sizesRaw,
-    unavail_sizes: unavailRaw,
+    sizes:            sizesRaw,
+    unavail_sizes:    unavailRaw,
+    colors:           colorsRaw,
+    payment_link_url: payLinkUrl,
     sold_out:      document.getElementById('pf-sold').checked,
     active:        document.getElementById('pf-active').checked,
     sort_order:    parseInt(document.getElementById('pf-sort').value) || 0,
@@ -1087,6 +1093,7 @@ async function loadSettings() {
   document.getElementById('settings-content').innerHTML = `
     <div class="edit-form" style="background:transparent;border:none;padding:0;max-width:520px">
       <div class="field"><label>Booking email</label><input id="st-booking" value="${esc(get('booking_email'))}"></div>
+      <div class="field"><label>Stripe restricted key <span style="opacity:.4;font-weight:400">(read-only, Products + Prices)</span></label><input id="st-stripe" value="${esc(get('stripe_key'))}" placeholder="rk_live_…"></div>
       <div class="btn-row" style="margin-bottom:40px">
         <button class="btn-primary" onclick="saveSettings()">Save settings</button>
       </div>
@@ -1114,9 +1121,55 @@ async function loadSettings() {
 
 async function saveSettings() {
   const bookingEmail = document.getElementById('st-booking').value.trim();
-  const { error } = await sb.from('settings').upsert({ key: 'booking_email', value: bookingEmail });
-  if (error) { toast('Error: ' + error.message); return; }
+  const stripeKey    = document.getElementById('st-stripe').value.trim();
+  const ops = [
+    sb.from('settings').upsert({ key: 'booking_email', value: bookingEmail }),
+    sb.from('settings').upsert({ key: 'stripe_key',    value: stripeKey }),
+  ];
+  const results = await Promise.all(ops);
+  if (results.some(r => r.error)) { toast('Error saving settings'); return; }
   toast('Settings saved');
+}
+
+async function syncFromStripe() {
+  const { data: setData } = await sb.from('settings').select('key,value');
+  const stripeKey = (setData||[]).find(s=>s.key==='stripe_key')?.value || '';
+  if (!stripeKey) { toast('Add your Stripe restricted key in Settings first'); return; }
+  toast('Syncing from Stripe…');
+  try {
+    const resp = await fetch('https://api.stripe.com/v1/products?active=true&limit=100&expand[]=data.default_price', {
+      headers: { 'Authorization': 'Basic ' + btoa(stripeKey + ':') }
+    });
+    if (!resp.ok) { const e = await resp.json(); toast('Stripe error: ' + (e.error?.message || resp.status)); return; }
+    const { data: products } = await resp.json();
+    let count = 0;
+    for (const p of products) {
+      const meta = p.metadata || {};
+      const dp   = p.default_price;
+      const curr = dp?.currency || 'gbp';
+      const sym  = curr === 'usd' ? '$' : curr === 'eur' ? '€' : '£';
+      const price = dp ? (dp.unit_amount / 100) : 0;
+      const payload = {
+        slug:             p.id,
+        stripe_product_id: p.id,
+        name:             p.name,
+        description:      p.description || '',
+        price,
+        image_url:        p.images?.[0] || '',
+        badge:            meta.badge || '',
+        sizes:            meta.sizes        ? meta.sizes.split(',').map(s=>s.trim()).filter(Boolean)         : [],
+        unavail_sizes:    meta.unavail_sizes ? meta.unavail_sizes.split(',').map(s=>s.trim()).filter(Boolean) : [],
+        colors:           meta.colors       ? meta.colors.split(',').map(s=>s.trim()).filter(Boolean)        : [],
+        payment_link_url: meta.payment_link || '',
+        active:           p.active,
+        sold_out:         meta.sold_out === 'true',
+      };
+      await sb.from('products').upsert(payload, { onConflict: 'slug' });
+      count++;
+    }
+    toast(`Synced ${count} product${count !== 1 ? 's' : ''} from Stripe`);
+    loadShop();
+  } catch(e) { toast('Sync failed: ' + e.message); }
 }
 
 async function addStreamLink() {

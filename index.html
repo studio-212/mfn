@@ -82,7 +82,6 @@ a { text-decoration: none; color: inherit; }
   fill: transparent;
   stroke: none;
   cursor: pointer;
-  transition: fill 0.25s ease;
   transform-box: fill-box;
   transform-origin: center;
   transform: scale(1.13);
@@ -743,6 +742,20 @@ a { text-decoration: none; color: inherit; }
 }
 .size-confirm-btn:hover { opacity: 0.85; }
 .size-confirm-btn:disabled { opacity: 0.3; cursor: default; }
+.color-section-label {
+  font-family: var(--fu); font-size: 9px; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--cream); opacity: 0.35;
+  margin-bottom: 10px;
+}
+.color-options { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; }
+.color-swatch {
+  width: 28px; height: 28px; border-radius: 50%; cursor: pointer;
+  outline: 2px solid rgba(232,224,204,0.12); outline-offset: 3px;
+  transition: outline-color 0.2s, transform 0.15s; border: none;
+}
+.color-swatch:hover { transform: scale(1.12); }
+.color-swatch.selected { outline-color: var(--cream); }
+.color-swatch.unavail { opacity: 0.2; cursor: default; }
 
 /* ═══════════════════════════════════
    SECTION: SHOP
@@ -882,6 +895,15 @@ a { text-decoration: none; color: inherit; }
 <div id="home">
   <svg id="flower" viewBox="57 70 443 415" xmlns="http://www.w3.org/2000/svg">
 
+    <defs>
+      <pattern id="pp-world"  patternUnits="userSpaceOnUse" x="57" y="70" width="443" height="415"><rect x="57" y="70" width="443" height="415" fill="rgba(232,224,204,0.22)"/><image id="ppi-world"  x="57" y="70" width="443" height="415" preserveAspectRatio="xMidYMid slice"/><rect x="57" y="70" width="443" height="415" fill="rgba(42,56,40,0.18)"/></pattern>
+      <pattern id="pp-about"  patternUnits="userSpaceOnUse" x="57" y="70" width="443" height="415"><rect x="57" y="70" width="443" height="415" fill="rgba(232,224,204,0.22)"/><image id="ppi-about"  x="57" y="70" width="443" height="415" preserveAspectRatio="xMidYMid slice"/><rect x="57" y="70" width="443" height="415" fill="rgba(42,56,40,0.18)"/></pattern>
+      <pattern id="pp-shows"  patternUnits="userSpaceOnUse" x="57" y="70" width="443" height="415"><rect x="57" y="70" width="443" height="415" fill="rgba(232,224,204,0.22)"/><image id="ppi-shows"  x="57" y="70" width="443" height="415" preserveAspectRatio="xMidYMid slice"/><rect x="57" y="70" width="443" height="415" fill="rgba(42,56,40,0.18)"/></pattern>
+      <pattern id="pp-shop"   patternUnits="userSpaceOnUse" x="57" y="70" width="443" height="415"><rect x="57" y="70" width="443" height="415" fill="rgba(232,224,204,0.22)"/><image id="ppi-shop"   x="57" y="70" width="443" height="415" preserveAspectRatio="xMidYMid slice"/><rect x="57" y="70" width="443" height="415" fill="rgba(42,56,40,0.18)"/></pattern>
+      <pattern id="pp-tbd"    patternUnits="userSpaceOnUse" x="57" y="70" width="443" height="415"><rect x="57" y="70" width="443" height="415" fill="rgba(232,224,204,0.22)"/><image id="ppi-tbd"    x="57" y="70" width="443" height="415" preserveAspectRatio="xMidYMid slice"/><rect x="57" y="70" width="443" height="415" fill="rgba(42,56,40,0.18)"/></pattern>
+      <pattern id="pp-stream" patternUnits="userSpaceOnUse" x="57" y="70" width="443" height="415"><rect x="57" y="70" width="443" height="415" fill="rgba(232,224,204,0.22)"/><image id="ppi-stream" x="57" y="70" width="443" height="415" preserveAspectRatio="xMidYMid slice"/><rect x="57" y="70" width="443" height="415" fill="rgba(42,56,40,0.18)"/></pattern>
+    </defs>
+
     <path class="petal-path" data-section="world"  d="M 242.6,170.3 L 242.7,172.3 L 242.8,174.4 L 242.9,176.5 L 243.2,178.7 L 243.5,181.1 L 244.0,183.6 L 244.7,186.2 L 245.5,189.2 L 246.5,192.5 L 247.9,196.2 L 249.5,200.6 L 251.3,205.5 L 253.1,211.0 L 254.4,216.7 L 254.9,222.2 L 254.3,226.9 L 252.4,230.7 L 249.5,233.5 L 246.0,235.4 L 241.9,236.4 L 237.6,236.4 L 233.0,235.3 L 228.2,233.3 L 223.6,230.3 L 219.2,226.3 L 215.1,221.8 L 211.5,217.3 L 208.5,213.4 L 206.0,210.3 L 203.8,207.8 L 201.9,205.9 L 200.1,204.2 L 198.5,202.8 L 197.0,201.6 L 195.5,200.6 L 194.1,199.6 L 192.7,198.7 L 191.3,197.9 L 189.9,197.1 L 188.5,196.3 L 187.0,195.6 L 185.6,194.9 L 184.0,194.3 L 182.5,193.6 L 180.8,192.9 L 179.2,192.1 L 177.5,191.3 L 175.8,190.3 L 174.2,189.2 L 172.7,188.0 L 171.2,186.6 L 169.8,185.2 L 168.3,183.7 L 166.7,182.1 L 165.0,180.4 L 163.0,178.7 L 160.9,176.8 L 158.6,174.8 L 156.2,172.5 L 153.8,170.0 L 151.4,167.2 L 149.2,164.3 L 147.2,161.1 L 145.7,157.7 L 144.7,154.3 L 144.4,150.9 L 144.8,147.6 L 145.6,144.4 L 146.9,141.3 L 148.4,138.4 L 150.3,135.7 L 152.4,133.1 L 154.7,130.8 L 157.3,128.7 L 160.1,126.9 L 163.0,125.3 L 165.9,123.8 L 168.8,122.5 L 171.7,121.3 L 174.6,120.2 L 177.5,119.3 L 180.5,118.6 L 183.5,118.2 L 186.5,117.9 L 189.4,117.5 L 192.2,117.1 L 195.1,116.6 L 197.9,116.2 L 200.7,115.9 L 203.5,115.9 L 206.4,116.1 L 209.1,116.8 L 211.8,117.9 L 214.2,119.6 L 216.4,121.8 L 218.3,124.1 L 220.2,126.5 L 221.9,128.8 L 223.5,130.9 L 224.9,133.0 L 226.3,135.0 L 227.6,137.0 L 228.9,138.8 L 230.3,140.5 L 231.7,142.1 L 233.1,143.7 L 234.4,145.3 L 235.6,147.0 L 236.6,148.8 L 237.5,150.6 L 238.2,152.6 L 238.9,154.5 L 239.6,156.4 L 240.4,158.3 L 241.2,160.2 L 241.8,162.1 L 242.2,164.1 L 242.4,166.2 L 242.5,168.2 Z"/>
     <path class="petal-path" data-section="about"  d="M 374.0,153.6 L 373.6,155.7 L 373.1,157.9 L 372.5,160.0 L 371.8,162.0 L 371.0,164.0 L 370.0,165.9 L 368.9,167.7 L 367.7,169.4 L 366.2,170.9 L 364.5,172.3 L 362.8,173.6 L 361.2,174.8 L 359.7,176.1 L 358.4,177.4 L 357.0,178.6 L 355.6,179.8 L 354.1,180.9 L 352.6,182.0 L 351.0,182.9 L 349.4,183.9 L 347.8,184.8 L 346.2,185.6 L 344.6,186.5 L 342.9,187.5 L 341.3,188.7 L 339.6,190.0 L 337.8,191.4 L 336.0,193.0 L 333.9,194.5 L 331.8,195.9 L 329.5,197.2 L 327.1,198.3 L 324.6,199.3 L 321.9,200.2 L 319.0,201.1 L 316.0,202.0 L 312.9,202.7 L 309.8,202.9 L 307.0,202.5 L 304.4,201.2 L 302.4,199.3 L 300.8,196.7 L 299.8,193.7 L 299.1,190.4 L 298.8,187.1 L 298.6,183.9 L 298.6,180.9 L 298.6,178.1 L 298.7,175.4 L 298.9,172.8 L 299.4,170.4 L 300.0,168.0 L 300.6,165.8 L 301.2,163.7 L 301.7,161.8 L 302.0,160.0 L 302.2,158.3 L 302.3,156.7 L 302.3,155.1 L 302.3,153.6 L 302.3,152.0 L 302.3,150.4 L 302.4,148.9 L 302.5,147.3 L 302.6,145.7 L 302.7,144.0 L 302.7,142.3 L 302.8,140.6 L 303.0,138.8 L 303.2,136.9 L 303.5,135.1 L 304.0,133.2 L 304.6,131.3 L 305.1,129.3 L 305.7,127.2 L 306.3,124.9 L 306.9,122.4 L 307.7,119.9 L 308.6,117.4 L 309.8,114.9 L 311.1,112.5 L 312.8,110.2 L 314.6,108.2 L 316.8,106.6 L 319.1,105.3 L 321.5,104.3 L 324.0,103.7 L 326.6,103.6 L 329.3,103.9 L 331.8,104.7 L 334.4,105.7 L 336.8,106.8 L 339.1,108.0 L 341.2,109.5 L 343.1,111.3 L 344.8,113.4 L 346.4,115.5 L 348.0,117.3 L 349.6,118.8 L 351.2,120.1 L 352.9,121.3 L 354.6,122.4 L 356.1,123.7 L 357.7,125.0 L 359.2,126.3 L 360.7,127.7 L 362.2,129.1 L 363.7,130.6 L 365.2,132.1 L 366.8,133.6 L 368.5,135.1 L 370.1,136.7 L 371.5,138.5 L 372.7,140.4 L 373.4,142.5 L 373.9,144.6 L 374.1,146.9 L 374.2,149.1 L 374.1,151.3 Z"/>
     <path class="petal-path" data-section="shows"  d="M 465.2,269.7 L 465.9,272.3 L 466.5,274.9 L 466.8,277.6 L 467.0,280.3 L 466.9,283.0 L 466.3,285.6 L 465.5,288.2 L 464.3,290.6 L 463.1,293.0 L 461.7,295.3 L 460.3,297.6 L 458.7,299.7 L 456.8,301.6 L 454.6,303.2 L 452.3,304.6 L 449.7,305.6 L 447.1,306.3 L 444.3,306.7 L 441.6,306.9 L 438.9,307.0 L 436.4,307.0 L 433.9,307.0 L 431.6,306.8 L 429.3,306.4 L 427.1,305.9 L 424.9,305.3 L 422.8,304.6 L 420.9,304.1 L 419.0,303.7 L 417.2,303.3 L 415.5,302.9 L 413.7,302.6 L 412.1,302.2 L 410.4,301.7 L 408.8,301.1 L 407.2,300.4 L 405.7,299.7 L 404.1,299.0 L 402.6,298.3 L 401.0,297.6 L 399.4,297.0 L 397.6,296.5 L 395.7,296.0 L 393.6,295.6 L 391.4,295.3 L 388.9,294.9 L 386.5,294.3 L 384.0,293.6 L 381.6,292.6 L 379.1,291.5 L 376.4,290.2 L 373.5,288.9 L 370.7,287.3 L 368.3,285.4 L 366.3,283.2 L 364.8,280.7 L 363.6,278.1 L 362.6,275.3 L 361.9,272.5 L 361.5,269.6 L 361.6,266.7 L 362.0,263.8 L 362.7,261.0 L 363.6,258.3 L 364.9,255.7 L 366.9,253.5 L 369.5,251.6 L 372.7,250.2 L 376.2,249.1 L 379.6,248.2 L 382.5,247.4 L 385.1,246.5 L 387.3,245.5 L 389.1,244.5 L 390.8,243.4 L 392.4,242.2 L 393.9,240.9 L 395.4,239.6 L 396.8,238.2 L 398.3,236.8 L 399.9,235.7 L 401.7,234.8 L 403.6,234.1 L 405.5,233.5 L 407.4,233.1 L 409.4,232.9 L 411.3,232.8 L 413.3,232.7 L 415.2,232.7 L 417.2,232.5 L 419.2,232.1 L 421.3,231.5 L 423.4,230.8 L 425.7,230.0 L 428.1,229.4 L 430.5,229.1 L 432.8,229.2 L 435.0,229.7 L 437.2,230.5 L 439.2,231.5 L 441.2,232.7 L 443.1,234.0 L 444.8,235.6 L 446.3,237.3 L 447.6,239.2 L 448.8,241.2 L 449.9,243.1 L 450.9,245.1 L 451.8,247.1 L 452.6,249.1 L 453.4,251.2 L 454.3,253.1 L 455.5,255.0 L 456.8,256.9 L 458.2,258.8 L 459.7,260.7 L 461.3,262.8 L 462.8,265.0 L 464.1,267.3 Z"/>
@@ -918,7 +940,7 @@ a { text-decoration: none; color: inherit; }
       <span class="back-arrow">←</span> Back
     </button>
     <span id="back-section-name"></span>
-    <button id="cart-trigger" onclick="openCart()">
+    <button id="cart-trigger" style="display:none" onclick="">
       <span id="cart-trigger-label">Cart</span>
       <span id="cart-trigger-count">0</span>
     </button>
@@ -1377,7 +1399,7 @@ function renderShop(products) {
       ? `<span class="shop-badge sold">Sold out</span>`
       : (p.badge ? `<span class="shop-badge">${esc(p.badge)}</span>` : '');
     const addBtn = !soldOut
-      ? `<button class="shop-add-btn" onclick="directAdd('${esc(p.slug)}',event)">Add to cart</button>` : '';
+      ? `<button class="shop-add-btn" onclick="quickBuy('${esc(p.slug)}',event)">Buy</button>` : '';
     return `<div class="shop-card" onclick="openProductDetail('${esc(p.slug)}')">
       <div class="shop-img">${imgContent}${badge}${addBtn}</div>
       <div class="shop-card-info">
@@ -1404,13 +1426,15 @@ function updateStreamLinks(links) {
 function rebuildProducts(products) {
   products.forEach(p => {
     PRODUCTS[p.slug] = {
-      name:    p.name,
-      price:   Number(p.price),
-      sub:     p.description || '',
-      imgUrl:  p.image_url   || '',
-      imgClass:'',
-      sizes:   Array.isArray(p.sizes)        ? p.sizes        : [],
-      unavail: Array.isArray(p.unavail_sizes) ? p.unavail_sizes : []
+      name:     p.name,
+      price:    Number(p.price),
+      sub:      p.description || '',
+      imgUrl:   p.image_url   || '',
+      imgClass: '',
+      sizes:    Array.isArray(p.sizes)        ? p.sizes        : [],
+      unavail:  Array.isArray(p.unavail_sizes) ? p.unavail_sizes : [],
+      colors:   Array.isArray(p.colors)        ? p.colors        : [],
+      payLink:  p.payment_link_url || '',
     };
   });
 }
@@ -1546,8 +1570,12 @@ overlay.addEventListener('click', e => {
         <p class="size-sheet-price" id="size-modal-price">£28</p>
       </div>
     </div>
+    <div id="color-section" style="display:none">
+      <p class="color-section-label">Colour</p>
+      <div class="color-options" id="color-options"></div>
+    </div>
     <div class="size-options" id="size-options"></div>
-    <button class="size-confirm-btn" id="size-confirm-btn" onclick="confirmSize()" disabled>
+    <button class="size-confirm-btn" id="size-confirm-btn" onclick="confirmSelection()" disabled>
       Select a size
     </button>
   </div>
@@ -1557,46 +1585,62 @@ overlay.addEventListener('click', e => {
 <script>
 
 /* ═══════════════════════════════════
-   CART & STRIPE
+   SHOP & STRIPE
 ═══════════════════════════════════ */
-const STRIPE_KEY = 'pk_test_REPLACE_WITH_YOUR_STRIPE_KEY';
-
 const PRODUCTS = {
-  'garden-tee':    { name: 'Garden tee',     price: 28, sub: '100% organic cotton', imgClass: 'mi1', sizes: ['XS','S','M','L','XL','XXL'], unavail: [] },
-  'nowhere-hoodie':{ name: 'Nowhere hoodie', price: 55, sub: 'Heavyweight fleece',  imgClass: 'mi2', sizes: ['XS','S','M','L','XL'],       unavail: ['XS'] },
-  'pressure-print':{ name: 'Pressure print', price: 18, sub: 'A3 risograph',        imgClass: 'mi3', sizes: [],                             unavail: [] },
-  'tote-bag':      { name: 'Tote bag',       price: 14, sub: 'Natural canvas',      imgClass: 'mi4', sizes: [],                             unavail: [] },
+  'garden-tee':    { name: 'Garden tee',     price: 28, sub: '100% organic cotton', imgClass: 'mi1', sizes: ['XS','S','M','L','XL','XXL'], unavail: [], colors: [], payLink: '' },
+  'nowhere-hoodie':{ name: 'Nowhere hoodie', price: 55, sub: 'Heavyweight fleece',  imgClass: 'mi2', sizes: ['XS','S','M','L','XL'],       unavail: ['XS'], colors: [], payLink: '' },
+  'pressure-print':{ name: 'Pressure print', price: 18, sub: 'A3 risograph',        imgClass: 'mi3', sizes: [],                             unavail: [], colors: [], payLink: '' },
+  'tote-bag':      { name: 'Tote bag',       price: 14, sub: 'Natural canvas',      imgClass: 'mi4', sizes: [],                             unavail: [], colors: [], payLink: '' },
 };
 
-let cart = [];
-let sizeModalProduct = null;
-let selectedSize = null;
+const COLOR_HEX = {
+  black:'#111111', white:'#f0ece0', cream:'#e8e0cc', navy:'#1a2640',
+  forest:'#2a3828', sage:'#8aad70', sand:'#c8b89a', red:'#b83020',
+  pink:'#d49090', blue:'#405a8a', brown:'#6a4020', grey:'#888888',
+  gray:'#888888', olive:'#6a7040', burgundy:'#6a1828', orange:'#c8601a',
+  yellow:'#d4b040', purple:'#6a4080', teal:'#305858', green:'#3a6020',
+};
+function colorHex(name) {
+  if (name.startsWith('#')) return name;
+  return COLOR_HEX[name.toLowerCase()] || '#888888';
+}
 
-function openCart() {
-  document.getElementById('cart-drawer').classList.add('open');
-  document.getElementById('cart-backdrop').classList.add('open');
-}
-function closeCart() {
-  document.getElementById('cart-drawer').classList.remove('open');
-  document.getElementById('cart-backdrop').classList.remove('open');
-}
+let sizeModalProduct = null;
+let selectedSize     = null;
+let selectedColor    = null;
 
 function openProductDetail(productId) {
   const p = PRODUCTS[productId];
   if (!p) return;
   sizeModalProduct = productId;
-  selectedSize = p.sizes.length === 0 ? 'One size' : null;
+  selectedSize  = p.sizes.length  === 0 ? 'One size' : null;
+  selectedColor = p.colors.length === 0 ? 'default'  : null;
 
-  // Populate sheet
-  document.getElementById('size-modal-name').textContent = p.name;
+  document.getElementById('size-modal-name').textContent  = p.name;
   document.getElementById('size-modal-price').textContent = '£' + p.price;
-
-  // Image
   const img = document.getElementById('detail-img');
-  img.className = p.imgClass;
-
-  // Sub
+  img.className = p.imgClass || '';
+  if (p.imgUrl) { img.style.backgroundImage = `url(${p.imgUrl})`; img.style.backgroundSize = 'cover'; }
   document.getElementById('detail-sub').textContent = p.sub;
+
+  // Colors
+  const colorSection = document.getElementById('color-section');
+  const colorOpts    = document.getElementById('color-options');
+  colorOpts.innerHTML = '';
+  if (p.colors.length > 0) {
+    colorSection.style.display = 'block';
+    p.colors.forEach(c => {
+      const btn = document.createElement('button');
+      btn.className = 'color-swatch';
+      btn.style.background = colorHex(c);
+      btn.title = c;
+      btn.onclick = () => selectColor(c);
+      colorOpts.appendChild(btn);
+    });
+  } else {
+    colorSection.style.display = 'none';
+  }
 
   // Sizes
   const opts = document.getElementById('size-options');
@@ -1614,32 +1658,38 @@ function openProductDetail(productId) {
     opts.style.display = 'none';
   }
 
-  // Confirm button
-  const confirm = document.getElementById('size-confirm-btn');
-  if (p.sizes.length === 0) {
-    confirm.textContent = 'Add to cart';
-    confirm.disabled = false;
-  } else {
-    confirm.textContent = 'Select a size';
-    confirm.disabled = true;
-  }
-
+  updateBuyBtn();
   document.getElementById('size-modal').classList.add('open');
 }
 
 function selectSize(size) {
   selectedSize = size;
-  document.querySelectorAll('.size-opt').forEach(b => {
-    b.classList.toggle('selected', b.textContent === size);
-  });
-  const btn = document.getElementById('size-confirm-btn');
-  btn.textContent = 'Add to cart';
-  btn.disabled = false;
+  document.querySelectorAll('.size-opt').forEach(b => b.classList.toggle('selected', b.textContent === size));
+  updateBuyBtn();
 }
 
-function confirmSize() {
-  if (!sizeModalProduct) return;
-  addToCart(sizeModalProduct, selectedSize || 'One size');
+function selectColor(color) {
+  selectedColor = color;
+  document.querySelectorAll('.color-swatch').forEach(b => b.classList.toggle('selected', b.title === color));
+  updateBuyBtn();
+}
+
+function updateBuyBtn() {
+  const p   = PRODUCTS[sizeModalProduct];
+  const btn = document.getElementById('size-confirm-btn');
+  const needsSize  = p && p.sizes.length  > 0 && !selectedSize;
+  const needsColor = p && p.colors.length > 0 && !selectedColor;
+  if (needsSize)       { btn.textContent = 'Select a size';   btn.disabled = true; }
+  else if (needsColor) { btn.textContent = 'Select a colour'; btn.disabled = true; }
+  else                 { btn.textContent = 'Buy →';           btn.disabled = false; }
+}
+
+function confirmSelection() {
+  const p = PRODUCTS[sizeModalProduct];
+  if (!p) return;
+  if (p.payLink) {
+    window.open(p.payLink, '_blank');
+  }
   closeSizeModal();
 }
 
@@ -1647,7 +1697,42 @@ function closeSizeModal() {
   document.getElementById('size-modal').classList.remove('open');
   sizeModalProduct = null;
   selectedSize = null;
+  selectedColor = null;
 }
+
+function quickBuy(productId, event) {
+  event.stopPropagation();
+  const p = PRODUCTS[productId];
+  if (!p) return;
+  if (p.sizes.length > 0 || p.colors.length > 0) {
+    openProductDetail(productId);
+  } else if (p.payLink) {
+    window.open(p.payLink, '_blank');
+  } else {
+    openProductDetail(productId);
+  }
+}
+
+// Preload petal images — resolves path+spaces issues by letting Image() do the URL resolution
+const PETAL_PHOTOS = {
+  world:  'Brand Assets/MFN graded/DSCF4045.jpg',
+  about:  'Brand Assets/MFN graded/DSCF3822.jpg',
+  shows:  'Brand Assets/MFN graded/DSCF4060.jpg',
+  shop:   'Brand Assets/MFN graded/DSCF3831.jpg',
+  tbd:    'Brand Assets/MFN graded/DSCF3858.jpg',
+  stream: 'Brand Assets/MFN graded/DSCF4077.jpg',
+};
+Object.entries(PETAL_PHOTOS).forEach(([section, path]) => {
+  const img = new Image();
+  img.onload = () => {
+    const el = document.getElementById('ppi-' + section);
+    if (el) {
+      el.setAttribute('href', img.src);
+      el.setAttributeNS('http://www.w3.org/1999/xlink', 'href', img.src);
+    }
+  };
+  img.src = path;
+});
 
 function toggleTracks(wrapId, total) {
   const wrap = document.getElementById(wrapId);
@@ -1657,81 +1742,6 @@ function toggleTracks(wrapId, total) {
   btn.querySelector('.tl-count').textContent = isOpen ? total + ' tracks +' : 'Collapse −';
 }
 
-// Direct add — from the card button only
-function directAdd(productId, event) {
-  event.stopPropagation();
-  const p = PRODUCTS[productId];
-  if (!p) return;
-  if (p.sizes.length > 0) {
-    // Has sizes — open detail so they must choose
-    openProductDetail(productId);
-  } else {
-    addToCart(productId, 'One size');
-  }
-}
-
-function addToCart(productId, size) {
-  const p = PRODUCTS[productId];
-  if (!p || p.unavail.includes(size)) return;
-  const existing = cart.find(i => i.id === productId && i.size === size);
-  if (existing) {
-    existing.qty++;
-  } else {
-    cart.push({ id: productId, name: p.name, price: p.price, size, qty: 1 });
-  }
-  renderCart();
-  openCart();
-}
-
-function removeFromCart(idx) {
-  cart.splice(idx, 1);
-  renderCart();
-}
-
-function changeQty(idx, delta) {
-  cart[idx].qty += delta;
-  if (cart[idx].qty <= 0) cart.splice(idx, 1);
-  renderCart();
-}
-
-function renderCart() {
-  const itemsEl = document.getElementById('cart-items');
-  const footer = document.getElementById('cart-footer');
-  const badge = document.getElementById('cart-badge');
-  const trigger = document.getElementById('cart-trigger-count');
-  const totalItems = cart.reduce((a, i) => a + i.qty, 0);
-  const totalPrice = cart.reduce((a, i) => a + i.price * i.qty, 0);
-
-  badge.textContent = totalItems;
-  trigger.textContent = totalItems;
-  trigger.style.display = totalItems > 0 ? 'flex' : 'none';
-
-  if (cart.length === 0) {
-    itemsEl.innerHTML = '<div class="cart-empty"><div class="cart-empty-icon">○</div><span class="cart-empty-text">Nothing here yet</span></div>';
-    footer.style.display = 'none';
-    return;
-  }
-
-  footer.style.display = 'block';
-  document.getElementById('cart-total').textContent = '£' + totalPrice;
-
-  itemsEl.innerHTML = cart.map((item, idx) => `
-    <div class="cart-item">
-      <div class="cart-item-img mi${(idx % 4) + 1}"></div>
-      <div class="cart-item-body">
-        <span class="cart-item-name">${item.name}</span>
-        <span class="cart-item-variant">${item.size}</span>
-        <div class="cart-item-controls">
-          <button class="cart-qty-btn" onclick="changeQty(${idx},-1)">−</button>
-          <span class="cart-qty">${item.qty}</span>
-          <button class="cart-qty-btn" onclick="changeQty(${idx},1)">+</button>
-          <button class="cart-item-remove" onclick="removeFromCart(${idx})">Remove</button>
-        </div>
-      </div>
-      <span class="cart-item-price">£${item.price * item.qty}</span>
-    </div>
-  `).join('');
-}
 
 async function startCheckout() {
   const btn = document.getElementById('checkout-btn');
@@ -1816,9 +1826,7 @@ async function startCheckout() {
     // Only affect home screen petals
     if (!document.getElementById('home').classList.contains('hidden')) {
       document.querySelectorAll('.petal-path').forEach(p => {
-        p.style.fill = p.dataset.section === section
-          ? 'rgba(232,224,204,0.22)'
-          : 'transparent';
+        p.style.fill = p.dataset.section === section ? `url(#pp-${section})` : 'transparent';
       });
     }
   }
