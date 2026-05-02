@@ -1754,8 +1754,8 @@ function quickBuy(productId, event) {
   }
 }
 
-// Preload petal images — resolves path+spaces issues by letting Image() do the URL resolution
-const PETAL_PHOTOS = {
+// Petal photos — loaded from Supabase petal_media table, with static fallbacks
+const PETAL_FALLBACKS = {
   world:  'Brand Assets/MFN web/DSCF4045.jpg',
   about:  'Brand Assets/MFN web/DSCF3822.jpg',
   shows:  'Brand Assets/MFN web/DSCF4060.jpg',
@@ -1763,7 +1763,8 @@ const PETAL_PHOTOS = {
   tbd:    'Brand Assets/MFN web/DSCF3858.jpg',
   stream: 'Brand Assets/MFN web/DSCF4077.jpg',
 };
-Object.entries(PETAL_PHOTOS).forEach(([section, src]) => {
+
+function setPetalPhoto(section, src) {
   const img = new Image();
   img.onload = () => {
     const el = document.querySelector(`#petal-fills image[data-section="${section}"]`);
@@ -1773,7 +1774,27 @@ Object.entries(PETAL_PHOTOS).forEach(([section, src]) => {
     }
   };
   img.src = src;
-});
+}
+
+async function loadPetalPhotos() {
+  if (sb) {
+    const { data } = await sb.from('petal_media').select('section, photo_url');
+    if (data && data.length) {
+      const loaded = new Set();
+      data.forEach(({ section, photo_url }) => {
+        if (photo_url) { setPetalPhoto(section, photo_url); loaded.add(section); }
+      });
+      // fallback for any section not yet in the DB
+      Object.entries(PETAL_FALLBACKS).forEach(([section, src]) => {
+        if (!loaded.has(section)) setPetalPhoto(section, src);
+      });
+      return;
+    }
+  }
+  // full fallback if Supabase unavailable or table empty
+  Object.entries(PETAL_FALLBACKS).forEach(([section, src]) => setPetalPhoto(section, src));
+}
+loadPetalPhotos();
 
 function toggleTracks(wrapId, total) {
   const wrap = document.getElementById(wrapId);
