@@ -1936,6 +1936,7 @@ async function startCheckout() {
     gyroBtn.textContent = 'Enable motion';
     gyroBtn.onclick = () => {
       if (inIframe) {
+        startGyro();
         window.parent.postMessage({ type: 'REQUEST_GYRO' }, '*');
       } else {
         DeviceOrientationEvent.requestPermission()
@@ -1953,7 +1954,6 @@ async function startCheckout() {
 
     window.addEventListener('message', e => {
       if (e.data?.type === 'GYRO_GRANTED') {
-        startGyro();
         makeRecenterBtn();
       }
     });
