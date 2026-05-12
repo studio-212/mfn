@@ -1805,6 +1805,8 @@ async function startCheckout() {
 (function() {
   if (!window.DeviceOrientationEvent) return;
 
+  const inIframe = window.self !== window.top;
+
   // Petal directions in degrees (0 = up, clockwise)
   // Mapped from their SVG position relative to centre (280,280)
   const PETALS = [
@@ -1933,17 +1935,28 @@ async function startCheckout() {
     // iOS — show Enable button first
     gyroBtn.textContent = 'Enable motion';
     gyroBtn.onclick = () => {
-      DeviceOrientationEvent.requestPermission()
-        .then(state => {
-          if (state === 'granted') {
-            startGyro();
-            makeRecenterBtn();
-          } else {
-            hideGyroBtn();
-          }
-        })
-        .catch(() => hideGyroBtn());
+      if (inIframe) {
+        window.parent.postMessage({ type: 'REQUEST_GYRO' }, '*');
+      } else {
+        DeviceOrientationEvent.requestPermission()
+          .then(state => {
+            if (state === 'granted') {
+              startGyro();
+              makeRecenterBtn();
+            } else {
+              hideGyroBtn();
+            }
+          })
+          .catch(() => hideGyroBtn());
+      }
     };
+
+    window.addEventListener('message', e => {
+      if (e.data?.type === 'GYRO_GRANTED') {
+        startGyro();
+        makeRecenterBtn();
+      }
+    });
     showGyroBtn();
   } else {
     // Android / other — check for gyro silently
