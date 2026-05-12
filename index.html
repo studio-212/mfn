@@ -1859,7 +1859,13 @@ async function startCheckout() {
     if (!document.getElementById('home').classList.contains('hidden')) {
       document.querySelectorAll('.petal-path').forEach(p => { p.style.fill = 'transparent'; });
       document.querySelectorAll('#petal-fills image, #petal-fills .petal-fill-ovl').forEach(el => {
-        el.style.opacity = el.dataset.section === section ? '1' : '0';
+        if (el.dataset.section === section) {
+          el.style.transition = 'opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1)';
+          el.style.opacity = '1';
+        } else {
+          el.style.transition = 'opacity 0.7s ease-out 0.2s';
+          el.style.opacity = '0';
+        }
       });
     }
   }
@@ -1935,21 +1941,17 @@ async function startCheckout() {
     // iOS — show Enable button first
     gyroBtn.textContent = 'Enable motion';
     gyroBtn.onclick = () => {
-      if (inIframe) {
-        startGyro();
-        window.parent.postMessage({ type: 'REQUEST_GYRO' }, '*');
-      } else {
-        DeviceOrientationEvent.requestPermission()
-          .then(state => {
-            if (state === 'granted') {
-              startGyro();
-              makeRecenterBtn();
-            } else {
-              hideGyroBtn();
-            }
-          })
-          .catch(() => hideGyroBtn());
-      }
+      if (inIframe) window.open(window.location.href, '_blank');
+      DeviceOrientationEvent.requestPermission()
+        .then(state => {
+          if (state === 'granted') {
+            startGyro();
+            makeRecenterBtn();
+          } else {
+            hideGyroBtn();
+          }
+        })
+        .catch(() => hideGyroBtn());
     };
 
     window.addEventListener('message', e => {
