@@ -110,8 +110,6 @@ a { text-decoration: none; color: inherit; }
   transform: scale(1.13);
 }
 
-/* Petal click zones — transparent, just capture events */
-.petal-g { cursor: pointer; }
 
 /* Petal label */
 .petal-label {
@@ -201,7 +199,6 @@ a { text-decoration: none; color: inherit; }
 }
 #back-btn:hover { opacity: 0.9; }
 .back-arrow { font-size: 20px; font-weight: 300; line-height: 1; }
-#back-section-name { display: none; }
 
 /* Section content wrapper */
 #section-content {
@@ -329,10 +326,6 @@ a { text-decoration: none; color: inherit; }
   color: var(--cream); opacity: 0.7;
 }
 /* Placeholder video thumbs */
-.vt1 { background: linear-gradient(135deg,#1a2a10,#3a5020); }
-.vt2 { background: linear-gradient(135deg,#200a0a,#502020); }
-.vt3 { background: linear-gradient(135deg,#0a1a20,#205040); }
-.vt4 { background: linear-gradient(135deg,#1a100a,#403010); }
 
 .proj-actions { display: flex; gap: 10px; flex-wrap: wrap; }
 
@@ -790,27 +783,6 @@ a { text-decoration: none; color: inherit; }
   line-height: 0.82; letter-spacing: -0.03em; color: var(--cream);
   margin-left: -2px;
 }
-.merch-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-.mc-card { display: flex; flex-direction: column; gap: 8px; cursor: pointer; }
-.mc-img {
-  width: 100%; aspect-ratio: 3/4; border-radius: 4px; overflow: hidden;
-  position: relative; border: 0.5px solid rgba(232,224,204,0.06);
-}
-.mc-img img { width:100%; height:100%; object-fit:cover; }
-.mi1 { background: linear-gradient(160deg,#1a2a14,#3a5028); }
-.mi2 { background: linear-gradient(160deg,#2a1a0a,#503018); }
-.mi3 { background: linear-gradient(160deg,#1a2020,#304040); }
-.mi4 { background: linear-gradient(160deg,#1a1a14,#383828); }
-.mc-badge {
-  position: absolute; top: 8px; left: 8px;
-  font-size: 7px; font-weight: 400; letter-spacing: 0.12em; text-transform: uppercase;
-  color: var(--bg); background: var(--cream);
-  padding: 3px 8px; border-radius: 99px;
-}
-.mc-badge.out { background: rgba(232,224,204,0.15); color: var(--cream); }
-.mc-info { display: flex; justify-content: space-between; align-items: baseline; }
-.mc-name { font-family: var(--fd); font-style: italic; font-size: 15px; color: var(--cream); }
-.mc-price { font-size: 11px; color: var(--cream); opacity: 0.35; }
 
 /* ═══════════════════════════════════
    SECTION: ? (sixth, TBD)
@@ -856,20 +828,15 @@ a { text-decoration: none; color: inherit; }
 @media (min-width: 640px) {
   #section-content { padding: 0 52px 80px; }
   #back { padding: 24px 52px; }
-  .merch-grid { grid-template-columns: repeat(4,1fr); }
-  .mc-img { aspect-ratio: 1; }
   .video-grid { grid-template-columns: repeat(3,1fr); }
   .proj-art { max-width: 400px; }
   .shop-grid { grid-template-columns: repeat(3, 1fr); }
 }
 @media (min-width: 960px) {
   .shop-grid { grid-template-columns: repeat(4, 1fr); }
-  .merch-grid { grid-template-columns: repeat(6, 1fr); }
 }
 
-</style>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<style>
+
 .tl-label {
   font-family: var(--fu); font-size: 9px; font-weight: 400;
   letter-spacing: 0.16em; text-transform: uppercase;
@@ -904,6 +871,7 @@ a { text-decoration: none; color: inherit; }
 .tl-toggle:hover { opacity: 0.8; }
 .tl-wrap.open + .tl-toggle { opacity: 0.6; }
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 </head>
 <body>
 
@@ -980,7 +948,6 @@ a { text-decoration: none; color: inherit; }
     <button id="back-btn" onclick="closeSection()">
       <span class="back-arrow">←</span> Back
     </button>
-    <span id="back-section-name"></span>
     <button id="cart-trigger" style="display:none" onclick="">
       <span id="cart-trigger-label">Cart</span>
       <span id="cart-trigger-count">0</span>
@@ -1513,7 +1480,6 @@ loadContent();
 const home    = document.getElementById('home');
 const overlay = document.getElementById('overlay');
 const content = document.getElementById('section-content');
-const secName = document.getElementById('back-section-name');
 
 function openSection(id) {
   if (id === 'stream') { openStream(); return; }
@@ -1522,7 +1488,6 @@ function openSection(id) {
   if (!sec) return;
 
   content.innerHTML = sec.html;
-  secName.textContent = sec.name;
   overlay.classList.add('open');
   home.classList.add('hidden');
   overlay.scrollTop = 0;
@@ -1881,7 +1846,11 @@ async function startCheckout() {
     return Math.sqrt(g * g + b * b);
   }
 
+  let gyroReady = false;
+  setTimeout(() => { gyroReady = true; }, 700);
+
   function setActive(section) {
+    if (!gyroReady) return;
     if (section === activeSection) return;
     activeSection = section;
 
@@ -1999,6 +1968,9 @@ async function startCheckout() {
   const flower = document.getElementById('flower');
   if (!flower) return;
 
+  flower.style.pointerEvents = 'none';
+  setTimeout(() => { flower.style.pointerEvents = ''; }, 700);
+
   let pressing = false;
 
   function petalUnder(x, y) {
@@ -2013,13 +1985,22 @@ async function startCheckout() {
     if (document.getElementById('home').classList.contains('hidden')) return;
     document.querySelectorAll('.petal-path').forEach(p => { p.style.fill = 'transparent'; });
     document.querySelectorAll('#petal-fills image, #petal-fills .petal-fill-ovl').forEach(el => {
-      el.style.opacity = el.dataset.section === section ? '1' : '0';
+      if (el.dataset.section === section) {
+        el.style.transition = 'opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1)';
+        el.style.opacity = '1';
+      } else {
+        el.style.transition = 'opacity 0.7s ease-out 0.2s';
+        el.style.opacity = '0';
+      }
     });
   }
 
   function clearHighlight() {
     document.querySelectorAll('.petal-path').forEach(p => { p.style.fill = 'transparent'; });
-    document.querySelectorAll('#petal-fills image, #petal-fills .petal-fill-ovl').forEach(el => { el.style.opacity = '0'; });
+    document.querySelectorAll('#petal-fills image, #petal-fills .petal-fill-ovl').forEach(el => {
+      el.style.transition = 'opacity 0.7s ease-out 0.2s';
+      el.style.opacity = '0';
+    });
   }
 
   flower.addEventListener('pointerdown', (e) => {
