@@ -2048,5 +2048,90 @@ async function startCheckout() {
   });
 })();
 </script>
+
+<script>
+/* ═══════════════════════════════════
+   FLOWER PARALLAX + BREATHING
+   Applies to #flower-wrap so it doesn't
+   conflict with the bloom animation on #flower.
+   Mouse: opposite-direction translate + 3D rotate.
+   Gyro: same, when motion is enabled.
+   Breathing: sine-wave scale pulse.
+═══════════════════════════════════ */
+(function() {
+  const wrap = document.getElementById('flower-wrap');
+  if (!wrap) return;
+
+  wrap.style.willChange = 'transform';
+
+  const TRANS   = 14;    // px max translation (mouse)
+  const TRANS_G = 20;    // px max translation (gyro)
+  const ROT     = 6;     // deg max rotation (mouse)
+  const ROT_G   = 9;     // deg max rotation (gyro)
+  const LERP_M  = 0.08;  // mouse smoothing
+  const LERP_G  = 0.048; // gyro smoothing (slower = silkier)
+  const BREATHE = 0.015; // scale amplitude (1.5%)
+  const PERIOD  = 3800;  // ms per breath cycle
+  const PERSP   = 900;   // perspective depth in px
+
+  let tmx = 0, tmy = 0; // mouse targets, normalised –1 to 1
+  let tgx = 0, tgy = 0; // gyro targets
+  let cmx = 0, cmy = 0; // lerped mouse
+  let cgx = 0, cgy = 0; // lerped gyro
+
+  // ── Mouse ──────────────────────────────────────
+  window.addEventListener('mousemove', e => {
+    const cx = window.innerWidth  / 2;
+    const cy = window.innerHeight / 2;
+    tmx = (e.clientX - cx) / cx;
+    tmy = (e.clientY - cy) / cy;
+  });
+  document.documentElement.addEventListener('mouseleave', () => { tmx = 0; tmy = 0; });
+
+  // ── Gyro (separate from petal-highlight listener) ──
+  let baseGx = null, baseGy = null;
+  window.addEventListener('deviceorientation', e => {
+    const g = e.gamma || 0, b = e.beta || 0;
+    if (baseGx === null) { baseGx = g; baseGy = b; return; }
+    const norm = (v, max) => Math.max(-1, Math.min(1, v / max));
+    // negative = opposite direction to tilt
+    tgx = -norm(g - baseGx, 28);
+    tgy = -norm(b - baseGy, 28);
+  }, true);
+
+  // ── rAF loop ───────────────────────────────────
+  function tick() {
+    cmx += (tmx - cmx) * LERP_M;
+    cmy += (tmy - cmy) * LERP_M;
+    cgx += (tgx - cgx) * LERP_G;
+    cgy += (tgy - cgy) * LERP_G;
+
+    // Translation: opposite to input direction
+    const tx = -cmx * TRANS  + cgx * TRANS_G;
+    const ty = -cmy * TRANS  + cgy * TRANS_G;
+
+    // Rotation: near-side leans toward input, giving 3D depth
+    // rotateX: mouse/gyro up → top tilts toward viewer
+    // rotateY: mouse/gyro right → right face toward viewer
+    const rx =  cmy * ROT  - cgy * ROT_G;
+    const ry = -cmx * ROT  + cgx * ROT_G;
+    // Subtle z-roll for extra organic dimensionality
+    const rz = (-cmx + cgx) * 1.8;
+
+    // Breathing: slow sine pulse on scale
+    const breathe = 1 + Math.sin(Date.now() * Math.PI * 2 / PERIOD) * BREATHE;
+
+    wrap.style.transform =
+      `perspective(${PERSP}px) ` +
+      `translate3d(${tx}px,${ty}px,0) ` +
+      `rotateX(${rx}deg) rotateY(${ry}deg) rotateZ(${rz}deg) ` +
+      `scale(${breathe})`;
+
+    requestAnimationFrame(tick);
+  }
+
+  requestAnimationFrame(tick);
+})();
+</script>
 </body>
 </html>
