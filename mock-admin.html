@@ -1,0 +1,1277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>mfn · admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;1,400;1,700&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:     #2a3828;
+  --bg2:    #1e2e1c;
+  --bg3:    #162414;
+  --cream:  #e8e0cc;
+  --dim:    rgba(232,224,204,0.45);
+  --border: rgba(232,224,204,0.1);
+  --fd:     'Playfair Display', Georgia, serif;
+  --fu:     'Jost', sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { min-height: 100vh; background: var(--bg); color: var(--cream); font-family: var(--fu); font-size: 14px; font-weight: 300; }
+a { color: inherit; text-decoration: none; }
+
+/* ── Loading ── */
+#loading {
+  position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+  background: var(--bg); z-index: 999;
+}
+.spinner {
+  width: 28px; height: 28px; border-radius: 50%;
+  border: 1.5px solid rgba(232,224,204,0.15);
+  border-top-color: rgba(232,224,204,0.6);
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Login ── */
+#login-screen {
+  display: none; min-height: 100vh;
+  align-items: center; justify-content: center;
+}
+.login-card {
+  width: 100%; max-width: 360px; padding: 48px 40px;
+  background: var(--bg2); border: 0.5px solid var(--border);
+  border-radius: 8px;
+}
+.login-title {
+  font-family: var(--fd); font-style: italic; font-weight: 700;
+  font-size: 40px; color: var(--cream); letter-spacing: -0.02em;
+  line-height: 1; margin-bottom: 4px;
+}
+.login-sub {
+  font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--cream); opacity: 0.3; margin-bottom: 36px;
+}
+.login-error {
+  font-size: 11px; color: #e88a6a; margin-bottom: 16px;
+  min-height: 16px; letter-spacing: 0.04em;
+}
+
+/* ── App shell ── */
+#app { display: none; min-height: 100vh; }
+
+header {
+  position: sticky; top: 0; z-index: 50;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 32px; height: 56px;
+  background: var(--bg3); border-bottom: 0.5px solid var(--border);
+}
+.header-title {
+  font-family: var(--fd); font-style: italic;
+  font-size: 18px; color: var(--cream); opacity: 0.8;
+  letter-spacing: 0.04em;
+}
+.header-user { font-size: 10px; color: var(--cream); opacity: 0.35; letter-spacing: 0.1em; }
+
+/* ── Tabs ── */
+nav.tabs {
+  display: flex; gap: 0; overflow-x: auto;
+  border-bottom: 0.5px solid var(--border);
+  padding: 0 32px; background: var(--bg2);
+}
+.tab-btn {
+  padding: 14px 20px; font-size: 9px; font-weight: 400;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--cream); opacity: 0.35; cursor: pointer;
+  background: none; border: none; border-bottom: 1.5px solid transparent;
+  transition: opacity 0.2s, border-color 0.2s; white-space: nowrap;
+}
+.tab-btn:hover { opacity: 0.7; }
+.tab-btn.active { opacity: 1; border-bottom-color: var(--cream); }
+
+/* ── Panel ── */
+#panel { padding: 40px 32px 80px; max-width: 900px; }
+
+/* ── Forms ── */
+.field { margin-bottom: 20px; }
+.field label {
+  display: block; font-size: 8px; font-weight: 400;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--cream); opacity: 0.4; margin-bottom: 8px;
+}
+.field input, .field textarea, .field select {
+  width: 100%; background: var(--bg2); color: var(--cream);
+  border: none; border-bottom: 0.5px solid var(--border);
+  padding: 10px 0; font-family: var(--fu); font-size: 14px; font-weight: 300;
+  outline: none; transition: border-color 0.2s; border-radius: 0;
+  appearance: none;
+}
+.field input:focus, .field textarea:focus { border-bottom-color: rgba(232,224,204,0.5); }
+.field textarea { resize: vertical; min-height: 100px; line-height: 1.7; }
+.field input[type="checkbox"] {
+  width: auto; height: 16px; width: 16px;
+  accent-color: var(--cream); cursor: pointer; border-bottom: none; padding: 0;
+}
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+.field-row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+.field-check { display: flex; align-items: center; gap: 10px; padding-top: 24px; }
+.field-check label { margin: 0; opacity: 0.6; font-size: 11px; letter-spacing: 0.08em; text-transform: none; }
+
+/* ── Buttons ── */
+.btn-primary {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 11px 24px; border-radius: 99px;
+  background: var(--cream); color: var(--bg);
+  font-family: var(--fu); font-size: 9px; font-weight: 400;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  border: none; cursor: pointer; transition: opacity 0.2s;
+}
+.btn-primary:hover { opacity: 0.85; }
+.btn-primary:disabled { opacity: 0.35; cursor: default; }
+.btn-outline {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 10px 22px; border-radius: 99px;
+  background: none; color: var(--cream);
+  border: 0.5px solid rgba(232,224,204,0.25);
+  font-family: var(--fu); font-size: 9px; font-weight: 400;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  cursor: pointer; transition: border-color 0.2s;
+}
+.btn-outline:hover { border-color: rgba(232,224,204,0.6); }
+.btn-danger {
+  background: none; border: none; cursor: pointer;
+  font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--cream); opacity: 0.2; padding: 0;
+  transition: opacity 0.2s; font-family: var(--fu);
+}
+.btn-danger:hover { opacity: 0.7; color: #e88a6a; }
+.btn-small {
+  padding: 7px 16px; font-size: 8px; border-radius: 99px;
+  background: none; color: var(--cream);
+  border: 0.5px solid rgba(232,224,204,0.2);
+  font-family: var(--fu); letter-spacing: 0.14em; text-transform: uppercase;
+  cursor: pointer; transition: border-color 0.2s;
+}
+.btn-small:hover { border-color: rgba(232,224,204,0.5); }
+.btn-row { display: flex; gap: 12px; align-items: center; margin-top: 28px; flex-wrap: wrap; }
+
+/* ── Section header ── */
+.section-head {
+  display: flex; align-items: baseline; justify-content: space-between;
+  margin-bottom: 32px; padding-bottom: 16px;
+  border-bottom: 0.5px solid var(--border);
+}
+.section-title {
+  font-family: var(--fd); font-style: italic; font-weight: 700;
+  font-size: 32px; color: var(--cream); letter-spacing: -0.02em;
+}
+
+/* ── List items ── */
+.list-table { width: 100%; border-collapse: collapse; margin-bottom: 32px; }
+.list-table th {
+  text-align: left; font-size: 8px; font-weight: 400;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--cream); opacity: 0.3;
+  padding: 0 0 12px; border-bottom: 0.5px solid var(--border);
+}
+.list-table td {
+  padding: 14px 0; border-bottom: 0.5px solid rgba(232,224,204,0.05);
+  vertical-align: middle; font-size: 13px;
+}
+.list-table td:last-child { text-align: right; }
+.td-actions { display: flex; gap: 12px; justify-content: flex-end; align-items: center; }
+.badge { display: inline-block; font-size: 7px; letter-spacing: 0.12em; text-transform: uppercase;
+  padding: 3px 8px; border-radius: 99px; }
+.badge-sold { background: rgba(232,224,204,0.1); color: var(--cream); }
+.badge-active { background: rgba(100,180,80,0.15); color: #8dc870; }
+.badge-inactive { background: rgba(232,224,204,0.06); color: var(--cream); opacity: 0.4; }
+
+/* ── Inline edit form ── */
+.edit-form {
+  background: var(--bg2); border: 0.5px solid var(--border);
+  border-radius: 6px; padding: 28px; margin-bottom: 20px;
+}
+.edit-form-title {
+  font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--cream); opacity: 0.4; margin-bottom: 24px;
+}
+
+/* ── Sub-items (tracks, quotes) ── */
+.sub-section { margin-top: 28px; }
+.sub-title {
+  font-size: 8px; letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--cream); opacity: 0.3; margin-bottom: 14px;
+  padding-bottom: 8px; border-bottom: 0.5px solid var(--border);
+}
+.sub-item {
+  display: flex; align-items: center; gap: 16px; padding: 10px 0;
+  border-bottom: 0.5px solid rgba(232,224,204,0.05); font-size: 13px;
+}
+.sub-item-main { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+.sub-item-label { font-family: var(--fd); font-style: italic; font-size: 15px; }
+.sub-item-meta { font-size: 10px; color: var(--cream); opacity: 0.35; letter-spacing: 0.04em; }
+
+/* ── Image preview ── */
+.img-preview {
+  width: 80px; height: 96px; border-radius: 4px; overflow: hidden;
+  background: rgba(232,224,204,0.06); border: 0.5px solid var(--border);
+  flex-shrink: 0;
+}
+.img-preview img { width: 100%; height: 100%; object-fit: cover; }
+.img-upload-row { display: flex; gap: 16px; align-items: flex-end; }
+.img-upload-row .field { flex: 1; margin-bottom: 0; }
+
+/* ── Toast ── */
+#toast {
+  position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%);
+  background: var(--bg2); border: 0.5px solid var(--border);
+  color: var(--cream); font-size: 11px; letter-spacing: 0.08em;
+  padding: 12px 24px; border-radius: 99px;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.3s;
+  white-space: nowrap; z-index: 200;
+}
+#toast.show { opacity: 1; }
+
+/* ── Divider ── */
+.divider { border: none; border-top: 0.5px solid var(--border); margin: 32px 0; }
+
+
+/* ── Petal media cards ── */
+.petal-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 20px;
+  margin-top: 8px;
+}
+.petal-card {
+  background: var(--bg2);
+  border: 0.5px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.petal-thumb {
+  width: 100%; height: 160px;
+  background: rgba(232,224,204,0.04);
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden;
+}
+.petal-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.petal-card-body {
+  padding: 14px 16px;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+}
+.petal-section-label {
+  font-family: var(--fd); font-style: italic; font-size: 17px; color: var(--cream);
+}
+label.petal-upload-btn {
+  cursor: pointer;
+  display: inline-flex; align-items: center;
+  padding: 7px 14px; font-size: 9px; font-weight: 400;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  border: 0.5px solid rgba(232,224,204,0.35); border-radius: 3px;
+  color: var(--cream); opacity: 0.7; white-space: nowrap;
+  transition: opacity 0.2s, border-color 0.2s;
+}
+label.petal-upload-btn:hover { opacity: 1; border-color: var(--cream); }
+.petal-upload-status {
+  font-size: 10px; opacity: 0.4; letter-spacing: 0.06em;
+  margin-top: 4px; padding: 0 16px 12px;
+}
+
+/* ── Responsive ── */
+@media (max-width: 600px) {
+  #panel { padding: 24px 20px 60px; }
+  nav.tabs { padding: 0 16px; }
+  header { padding: 0 20px; }
+  .field-row, .field-row3 { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div id="loading"><div class="spinner"></div></div>
+
+<div id="login-screen">
+  <div class="login-card">
+    <h1 class="login-title">Admin</h1>
+    <p class="login-sub">mau from nowhere</p>
+    <p style="font-size:10px;line-height:1.6;color:var(--cream);opacity:0.3;margin-bottom:28px;letter-spacing:0.02em">
+      This is a demo panel. Any credentials will work — nothing you change here will affect the live site.
+    </p>
+    <p class="login-error" id="login-error"></p>
+    <div class="field">
+      <label>Email</label>
+      <input type="email" id="login-email" placeholder="you@example.com" autocomplete="email">
+    </div>
+    <div class="field" style="margin-bottom:28px">
+      <label>Password</label>
+      <input type="password" id="login-password" autocomplete="current-password">
+    </div>
+    <button class="btn-primary" onclick="doLogin()" id="login-btn">Sign in</button>
+  </div>
+</div>
+
+<div id="app">
+  <header>
+    <span class="header-title">mfn admin</span>
+    <div style="display:flex;align-items:center;gap:20px">
+      <span class="header-user" id="header-email"></span>
+      <button class="btn-small" onclick="doSignOut()">Sign out</button>
+    </div>
+  </header>
+
+  <nav class="tabs">
+    <button class="tab-btn active" data-tab="home"     onclick="showTab('home')">Home</button>
+    <button class="tab-btn"        data-tab="shows"    onclick="showTab('shows')">Shows</button>
+    <button class="tab-btn"        data-tab="shop"     onclick="showTab('shop')">Shop</button>
+    <button class="tab-btn"        data-tab="releases" onclick="showTab('releases')">Releases</button>
+    <button class="tab-btn"        data-tab="about"    onclick="showTab('about')">About</button>
+    <button class="tab-btn"        data-tab="settings" onclick="showTab('settings')">Settings</button>
+  </nav>
+
+  <div id="panel"></div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+/* ─── MOCK DATA ──────────────────────────────────────────── */
+let mockShows = [
+  { id: 'show-1', date: '14 Jun 2025', city: 'London',     venue: 'Corsica Studios',             ticket_url: '#', sold_out: false, sort_order: 1 },
+  { id: 'show-2', date: '21 Jun 2025', city: 'Manchester', venue: 'The White Hotel',              ticket_url: '#', sold_out: true,  sort_order: 2 },
+  { id: 'show-3', date: '4 Jul 2025',  city: 'Berlin',     venue: 'Tresor',                       ticket_url: '#', sold_out: false, sort_order: 3 },
+  { id: 'show-4', date: '19 Jul 2025', city: 'Paris',      venue: 'La Machine du Moulin Rouge',   ticket_url: '#', sold_out: false, sort_order: 4 },
+];
+
+let mockProducts = [
+  { id: 'prod-1', slug: 'garden-tee',      name: 'Garden Tee',      price: 38, badge: 'New',     description: '100% organic cotton, pre-shrunk',    image_url: '', sizes: ['XS','S','M','L','XL'], unavail_sizes: ['XS'], colors: ['Forest','Cream'],    payment_link_url: '#', sold_out: false, active: true,  sort_order: 1 },
+  { id: 'prod-2', slug: 'nowhere-hoodie',  name: 'Nowhere Hoodie',  price: 72, badge: 'Limited', description: 'Heavy-weight fleece, garment-dyed',   image_url: '', sizes: ['S','M','L','XL'],      unavail_sizes: [],     colors: ['Charcoal'],          payment_link_url: '#', sold_out: false, active: true,  sort_order: 2 },
+  { id: 'prod-3', slug: 'canvas-tote',     name: 'Canvas Tote',     price: 24, badge: '',        description: 'Natural canvas with screen print',    image_url: '', sizes: [],                     unavail_sizes: [],     colors: ['Natural'],           payment_link_url: '#', sold_out: true,  active: true,  sort_order: 3 },
+  { id: 'prod-4', slug: 'from-nowhere-lp', name: 'From Nowhere LP', price: 28, badge: '',        description: '180g vinyl, includes download code',  image_url: '', sizes: [],                     unavail_sizes: [],     colors: [],                    payment_link_url: '#', sold_out: false, active: false, sort_order: 4 },
+];
+
+let mockReleases = [
+  {
+    id: 'rel-1', title: 'From Nowhere', year: '2024', type: 'Album',
+    description: 'Debut full-length. Ten tracks of ambient folk and spoken word recorded between London and Lisbon.',
+    cover_art_url: '', spotify_url: 'https://open.spotify.com', bandcamp_url: 'https://maufromnowhere.bandcamp.com',
+    platform_links: [
+      { platform: 'Spotify',     url: 'https://open.spotify.com' },
+      { platform: 'Bandcamp',    url: 'https://maufromnowhere.bandcamp.com' },
+      { platform: 'Apple Music', url: 'https://music.apple.com' },
+    ],
+    videos: [
+      { title: 'From Nowhere (Official Video)', url: 'https://youtube.com/watch?v=example1' },
+    ],
+    visible: true, sort_order: 1,
+    release_quotes: [
+      { id: 'q-1', release_id: 'rel-1', quote: 'A haunting debut that feels inevitable.', source: 'The Wire',        sort_order: 1 },
+      { id: 'q-2', release_id: 'rel-1', quote: 'Quietly devastating.',                    source: 'Loud And Quiet', sort_order: 2 },
+    ],
+    release_tracks: [
+      { id: 't-1', release_id: 'rel-1', name: 'Arrival',      feat: null,  stream_url: '#', sort_order: 1 },
+      { id: 't-2', release_id: 'rel-1', name: 'Garden',       feat: null,  stream_url: '#', sort_order: 2 },
+      { id: 't-3', release_id: 'rel-1', name: 'Nowhere Left', feat: 'Aya', stream_url: '#', sort_order: 3 },
+      { id: 't-4', release_id: 'rel-1', name: 'Dust & Light', feat: null,  stream_url: '#', sort_order: 4 },
+      { id: 't-5', release_id: 'rel-1', name: 'Crossing',     feat: null,  stream_url: '#', sort_order: 5 },
+    ],
+  },
+  {
+    id: 'rel-2', title: 'In Between', year: '2023', type: 'EP',
+    description: 'Four-track EP released digitally. A precursor to the debut album, exploring themes of transition.',
+    cover_art_url: '', spotify_url: 'https://open.spotify.com', bandcamp_url: 'https://maufromnowhere.bandcamp.com',
+    platform_links: [
+      { platform: 'Spotify',  url: 'https://open.spotify.com' },
+      { platform: 'Bandcamp', url: 'https://maufromnowhere.bandcamp.com' },
+    ],
+    videos: [],
+    visible: true, sort_order: 2,
+    release_quotes: [
+      { id: 'q-3', release_id: 'rel-2', quote: 'A promising and intimate introduction.', source: 'Pitchfork', sort_order: 1 },
+    ],
+    release_tracks: [
+      { id: 't-6', release_id: 'rel-2', name: 'Between',    feat: null, stream_url: '#', sort_order: 1 },
+      { id: 't-7', release_id: 'rel-2', name: 'Still',      feat: null, stream_url: '#', sort_order: 2 },
+      { id: 't-8', release_id: 'rel-2', name: 'Threshold',  feat: null, stream_url: '#', sort_order: 3 },
+      { id: 't-9', release_id: 'rel-2', name: 'Returning',  feat: null, stream_url: '#', sort_order: 4 },
+    ],
+  },
+];
+
+let mockAbout = {
+  id: 'about-1',
+  quote: 'Music is the space between the notes.',
+  quote_source: 'Claude Debussy',
+  bio: `Mau from Nowhere is the project of London-based musician and producer Mau. Drawing from ambient, folk, and electronic traditions, the music explores themes of displacement, memory, and belonging.
+
+Formed in 2022, the project has toured extensively across Europe, sharing stages with artists including Arca, Grouper, and Floating Points. The debut album 'From Nowhere' was released in early 2024 to widespread critical acclaim.`,
+  portrait_url: '',
+  contact_email: 'mgmt.mfn@gmail.com',
+  press_names: ['The Wire', 'Loud And Quiet', 'Pitchfork', 'NTS Radio', 'Crack Magazine', 'FACT Magazine'],
+  achievements: [
+    "Debut album 'From Nowhere' — 2024",
+    'European headline tour — Spring 2024',
+    'Supported Arca at Barbican Centre — 2023',
+    'NTS Radio monthly residency — 2023',
+    "In Between EP — 2023",
+  ],
+};
+
+let mockSettings = { booking_email: 'mgmt.mfn@gmail.com', stripe_key: '' };
+
+let mockStreamLinks = [
+  { id: 'stl-1', platform: 'Spotify',    url: 'https://open.spotify.com/artist/maufromnowhere',   sort_order: 1 },
+  { id: 'stl-2', platform: 'Bandcamp',   url: 'https://maufromnowhere.bandcamp.com',               sort_order: 2 },
+  { id: 'stl-3', platform: 'SoundCloud', url: 'https://soundcloud.com/maufromnowhere',             sort_order: 3 },
+  { id: 'stl-4', platform: 'Apple Music', url: 'https://music.apple.com/artist/maufromnowhere',   sort_order: 4 },
+];
+
+let mockPetalMedia = [
+  { section: 'world',  label: 'World',  photo_url: '' },
+  { section: 'about',  label: 'About',  photo_url: '' },
+  { section: 'shows',  label: 'Shows',  photo_url: '' },
+  { section: 'shop',   label: 'Shop',   photo_url: '' },
+  { section: 'tbd',    label: 'TBD',    photo_url: '' },
+  { section: 'stream', label: 'Stream', photo_url: '' },
+];
+
+/* ─── UTILS ──────────────────────────────────────────────── */
+function toast(msg, dur = 2400) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), dur);
+}
+
+function esc(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+async function uploadImage(file) {
+  await new Promise(r => setTimeout(r, 500));
+  return new Promise(resolve => {
+    const reader = new FileReader();
+    reader.onload = e => resolve(e.target.result);
+    reader.readAsDataURL(file);
+  });
+}
+
+function imgPreviewHtml(url, id) {
+  return `<div class="img-preview" id="${id}">${url ? `<img src="${esc(url)}">` : ''}</div>`;
+}
+
+function previewImg(inputId, previewId) {
+  const file = document.getElementById(inputId)?.files?.[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const el = document.getElementById(previewId);
+    if (el) el.innerHTML = `<img src="${e.target.result}">`;
+  };
+  reader.readAsDataURL(file);
+}
+
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+
+/* ─── AUTH ───────────────────────────────────────────────── */
+function doLogin() {
+  const email = document.getElementById('login-email').value.trim() || 'admin@mfn.com';
+  document.getElementById('login-screen').style.display = 'none';
+  enterApp(email);
+}
+
+document.getElementById('login-password').addEventListener('keydown', e => {
+  if (e.key === 'Enter') doLogin();
+});
+
+function doSignOut() {
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+}
+
+function init() {
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+}
+
+function enterApp(email) {
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('header-email').textContent = email;
+  showTab('home');
+}
+
+/* ─── TAB ROUTING ────────────────────────────────────────── */
+let activeTab = 'home';
+
+function showTab(tab) {
+  activeTab = tab;
+  document.querySelectorAll('.tab-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.tab === tab);
+  });
+  const map = { home: loadHome, shows: loadShows, shop: loadShop, releases: loadReleases, about: loadAbout, settings: loadSettings };
+  (map[tab] || (() => {}))();
+}
+
+/* ═══════════════════════════════════════════════════════════
+   SHOWS
+═══════════════════════════════════════════════════════════ */
+let showEditId = null;
+
+function loadShows() {
+  const panel = document.getElementById('panel');
+  panel.innerHTML = `<div class="section-head"><h2 class="section-title">Shows</h2><button class="btn-outline" onclick="showShowForm(null)">+ Add show</button></div><div id="shows-form"></div><div id="shows-list"></div>`;
+  renderShowsList(mockShows);
+}
+
+function renderShowsList(shows) {
+  const el = document.getElementById('shows-list');
+  if (!shows.length) { el.innerHTML = `<p style="opacity:.3;font-size:12px">No shows yet.</p>`; return; }
+  el.innerHTML = `<table class="list-table">
+    <thead><tr><th>Date</th><th>City</th><th>Venue</th><th>Status</th><th></th></tr></thead>
+    <tbody>${shows.map(s => `<tr>
+      <td style="font-family:var(--fd);font-style:italic;font-size:17px">${esc(s.date)}</td>
+      <td>${esc(s.city)}</td>
+      <td style="opacity:.5">${esc(s.venue)}</td>
+      <td>${s.sold_out ? `<span class="badge badge-sold">Sold out</span>` : ''}</td>
+      <td><div class="td-actions">
+        <button class="btn-small" onclick='showShowForm(${JSON.stringify(s)})'>Edit</button>
+        <button class="btn-danger" onclick="deleteShow('${s.id}')">Delete</button>
+      </div></td>
+    </tr>`).join('')}</tbody>
+  </table>`;
+}
+
+function showShowForm(show) {
+  showEditId = show?.id || null;
+  document.getElementById('shows-form').innerHTML = `
+    <div class="edit-form">
+      <p class="edit-form-title">${show ? 'Edit show' : 'New show'}</p>
+      <div class="field-row">
+        <div class="field"><label>Date</label><input id="sf-date" value="${esc(show?.date||'')}" placeholder="18 Apr 2025"></div>
+        <div class="field"><label>City</label><input id="sf-city" value="${esc(show?.city||'')}"></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Venue</label><input id="sf-venue" value="${esc(show?.venue||'')}"></div>
+        <div class="field"><label>Ticket URL</label><input id="sf-url" value="${esc(show?.ticket_url||'')}"></div>
+      </div>
+      <div class="field-row">
+        <div class="field-check">
+          <input type="checkbox" id="sf-sold" ${show?.sold_out ? 'checked' : ''}>
+          <label for="sf-sold">Sold out</label>
+        </div>
+        <div class="field"><label>Sort order</label><input type="number" id="sf-sort" value="${show?.sort_order||0}" style="width:80px"></div>
+      </div>
+      <div class="btn-row">
+        <button class="btn-primary" onclick="saveShow()">Save show</button>
+        <button class="btn-outline" onclick="cancelShowForm()">Cancel</button>
+      </div>
+    </div>`;
+  document.getElementById('shows-form').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function cancelShowForm() { document.getElementById('shows-form').innerHTML = ''; showEditId = null; }
+
+function saveShow() {
+  const payload = {
+    date:       document.getElementById('sf-date').value.trim(),
+    city:       document.getElementById('sf-city').value.trim(),
+    venue:      document.getElementById('sf-venue').value.trim(),
+    ticket_url: document.getElementById('sf-url').value.trim(),
+    sold_out:   document.getElementById('sf-sold').checked,
+    sort_order: parseInt(document.getElementById('sf-sort').value) || 0,
+  };
+  if (showEditId) {
+    const idx = mockShows.findIndex(s => s.id === showEditId);
+    if (idx >= 0) mockShows[idx] = { ...mockShows[idx], ...payload };
+  } else {
+    mockShows.push({ id: uid(), ...payload });
+  }
+  toast(showEditId ? 'Show updated' : 'Show added');
+  cancelShowForm();
+  loadShows();
+}
+
+function deleteShow(id) {
+  if (!confirm('Delete this show?')) return;
+  mockShows = mockShows.filter(s => s.id !== id);
+  toast('Deleted');
+  loadShows();
+}
+
+/* ═══════════════════════════════════════════════════════════
+   SHOP
+═══════════════════════════════════════════════════════════ */
+let shopEditId = null;
+
+function loadShop() {
+  const panel = document.getElementById('panel');
+  panel.innerHTML = `<div class="section-head"><h2 class="section-title">Shop</h2><div style="display:flex;gap:8px"><button class="btn-outline" onclick="syncFromStripe()">↓ Sync from Stripe</button><button class="btn-outline" onclick="showProductForm(null)">+ Add product</button></div></div><div id="shop-form"></div><div id="shop-list"></div>`;
+  renderProductList(mockProducts);
+}
+
+function renderProductList(products) {
+  const el = document.getElementById('shop-list');
+  if (!products.length) { el.innerHTML = `<p style="opacity:.3;font-size:12px">No products yet.</p>`; return; }
+  el.innerHTML = `<table class="list-table">
+    <thead><tr><th>Name</th><th>Price</th><th>Badge</th><th>Status</th><th></th></tr></thead>
+    <tbody>${products.map(p => `<tr>
+      <td><div style="display:flex;align-items:center;gap:12px">
+        ${p.image_url ? `<div class="img-preview" style="width:40px;height:48px;flex-shrink:0"><img src="${esc(p.image_url)}"></div>` : ''}
+        <span style="font-family:var(--fd);font-style:italic;font-size:16px">${esc(p.name)}</span>
+      </div></td>
+      <td>£${esc(p.price)}</td>
+      <td style="opacity:.5;font-size:11px">${esc(p.badge||'')}</td>
+      <td>${p.sold_out ? `<span class="badge badge-sold">Sold out</span>` : p.active ? `<span class="badge badge-active">Active</span>` : `<span class="badge badge-inactive">Hidden</span>`}</td>
+      <td><div class="td-actions">
+        <button class="btn-small" onclick='showProductForm(${JSON.stringify(p).replace(/'/g,"&#39;")})'>Edit</button>
+        <button class="btn-danger" onclick="deleteProduct('${p.id}')">Delete</button>
+      </div></td>
+    </tr>`).join('')}</tbody>
+  </table>`;
+}
+
+function showProductForm(product) {
+  shopEditId = product?.id || null;
+  const sizes   = Array.isArray(product?.sizes)        ? product.sizes.join(', ')        : (product?.sizes || '');
+  const unavail = Array.isArray(product?.unavail_sizes) ? product.unavail_sizes.join(', ') : (product?.unavail_sizes || '');
+  document.getElementById('shop-form').innerHTML = `
+    <div class="edit-form">
+      <p class="edit-form-title">${product ? 'Edit product' : 'New product'}</p>
+      <div class="field-row">
+        <div class="field"><label>Product name</label><input id="pf-name" value="${esc(product?.name||'')}"></div>
+        <div class="field"><label>Slug (URL key)</label><input id="pf-slug" value="${esc(product?.slug||'')}" placeholder="garden-tee"></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Price (£)</label><input type="number" id="pf-price" value="${esc(product?.price||'')}"></div>
+        <div class="field"><label>Badge label</label><input id="pf-badge" value="${esc(product?.badge||'')}" placeholder="New / Limited"></div>
+      </div>
+      <div class="field"><label>Description</label><input id="pf-desc" value="${esc(product?.description||'')}" placeholder="100% organic cotton"></div>
+      <div class="field"><label>Stripe Payment Link URL</label><input id="pf-paylink" value="${esc(product?.payment_link_url||'')}" placeholder="https://buy.stripe.com/…"></div>
+      <div class="field"><label>Sizes (comma-separated)</label><input id="pf-sizes" value="${esc(sizes)}" placeholder="XS, S, M, L, XL, XXL"></div>
+      <div class="field"><label>Colours (comma-separated)</label><input id="pf-colors" value="${esc(Array.isArray(product?.colors) ? product.colors.join(', ') : (product?.colors||''))}" placeholder="Black, White, Forest"></div>
+      <div class="field"><label>Unavailable sizes (comma-separated)</label><input id="pf-unavail" value="${esc(unavail)}" placeholder="XS"></div>
+      <div class="img-upload-row" style="margin-bottom:20px">
+        ${imgPreviewHtml(product?.image_url, 'pf-preview')}
+        <div class="field"><label>Product image</label><input type="file" id="pf-img" accept="image/*" onchange="previewImg('pf-img','pf-preview')"></div>
+      </div>
+      <div class="field-row">
+        <div class="field-check"><input type="checkbox" id="pf-sold" ${product?.sold_out?'checked':''}><label for="pf-sold">Sold out</label></div>
+        <div class="field-check"><input type="checkbox" id="pf-active" ${product?.active!==false?'checked':''}><label for="pf-active">Active (visible on site)</label></div>
+        <div class="field"><label>Sort order</label><input type="number" id="pf-sort" value="${product?.sort_order||0}" style="width:80px"></div>
+      </div>
+      <div class="btn-row">
+        <button class="btn-primary" onclick="saveProduct('${esc(product?.image_url||'')}')">Save product</button>
+        <button class="btn-outline" onclick="cancelProductForm()">Cancel</button>
+      </div>
+    </div>`;
+  document.getElementById('shop-form').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function cancelProductForm() { document.getElementById('shop-form').innerHTML = ''; shopEditId = null; }
+
+async function saveProduct(existingImgUrl) {
+  const name  = document.getElementById('pf-name').value.trim();
+  const slug  = document.getElementById('pf-slug').value.trim();
+  const price = parseFloat(document.getElementById('pf-price').value);
+  if (!name || !slug || isNaN(price)) { toast('Name, slug and price are required'); return; }
+
+  let imageUrl = existingImgUrl;
+  const imgFile = document.getElementById('pf-img')?.files?.[0];
+  if (imgFile) imageUrl = await uploadImage(imgFile);
+
+  const payload = {
+    slug, name, price,
+    description:      document.getElementById('pf-desc').value.trim(),
+    badge:            document.getElementById('pf-badge').value.trim(),
+    image_url:        imageUrl,
+    sizes:            document.getElementById('pf-sizes').value.split(',').map(s=>s.trim()).filter(Boolean),
+    unavail_sizes:    document.getElementById('pf-unavail').value.split(',').map(s=>s.trim()).filter(Boolean),
+    colors:           document.getElementById('pf-colors').value.split(',').map(s=>s.trim()).filter(Boolean),
+    payment_link_url: document.getElementById('pf-paylink').value.trim(),
+    sold_out:         document.getElementById('pf-sold').checked,
+    active:           document.getElementById('pf-active').checked,
+    sort_order:       parseInt(document.getElementById('pf-sort').value) || 0,
+  };
+
+  if (shopEditId) {
+    const idx = mockProducts.findIndex(p => p.id === shopEditId);
+    if (idx >= 0) mockProducts[idx] = { ...mockProducts[idx], ...payload };
+  } else {
+    mockProducts.push({ id: uid(), ...payload });
+  }
+  toast(shopEditId ? 'Product updated' : 'Product added');
+  cancelProductForm();
+  loadShop();
+}
+
+function deleteProduct(id) {
+  if (!confirm('Delete this product?')) return;
+  mockProducts = mockProducts.filter(p => p.id !== id);
+  toast('Deleted');
+  loadShop();
+}
+
+async function syncFromStripe() {
+  toast('Syncing from Stripe…');
+  await new Promise(r => setTimeout(r, 1000));
+  toast('Synced ' + mockProducts.length + ' products from Stripe (demo)');
+  loadShop();
+}
+
+/* ═══════════════════════════════════════════════════════════
+   RELEASES
+═══════════════════════════════════════════════════════════ */
+let relEditId = null;
+
+function loadReleases() {
+  const panel = document.getElementById('panel');
+  panel.innerHTML = `<div class="section-head"><h2 class="section-title">Releases</h2><button class="btn-outline" onclick="showReleaseForm(null)">+ Add release</button></div><div id="rel-form"></div><div id="rel-list"></div>`;
+  renderReleaseList(mockReleases);
+}
+
+function renderReleaseList(releases) {
+  const el = document.getElementById('rel-list');
+  if (!releases.length) { el.innerHTML = `<p style="opacity:.3;font-size:12px">No releases yet.</p>`; return; }
+  el.innerHTML = releases.map(r => `
+    <div style="border:0.5px solid var(--border);border-radius:6px;padding:20px 24px;margin-bottom:16px">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px">
+        <div style="display:flex;gap:16px;align-items:flex-start">
+          ${r.cover_art_url ? `<div class="img-preview" style="flex-shrink:0"><img src="${esc(r.cover_art_url)}"></div>` : ''}
+          <div>
+            <p style="font-family:var(--fd);font-style:italic;font-size:20px;margin-bottom:2px">${esc(r.title)}</p>
+            <p style="font-size:10px;opacity:.4;letter-spacing:0.08em">${esc(r.year)} · ${esc(r.type||'')}</p>
+            <p style="font-size:11px;opacity:.35;margin-top:6px">${(r.release_quotes||[]).length} quote${(r.release_quotes||[]).length!==1?'s':''} · ${(r.release_tracks||[]).length} track${(r.release_tracks||[]).length!==1?'s':''}</p>
+          </div>
+        </div>
+        <div class="td-actions">
+          <button class="btn-small" onclick='showReleaseForm(${JSON.stringify({...r, release_quotes:undefined, release_tracks:undefined}).replace(/'/g,"&#39;")})'>Edit</button>
+          <button class="btn-danger" onclick="deleteRelease('${r.id}')">Delete</button>
+        </div>
+      </div>
+      <hr class="divider" style="margin:16px 0">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
+        <div>
+          <p class="sub-title">Quotes</p>
+          <div id="quotes-${r.id}">
+            ${(r.release_quotes||[]).sort((a,b)=>(a.sort_order||0)-(b.sort_order||0)).map(q=>
+              `<div class="sub-item">
+                <div class="sub-item-main">
+                  <span class="sub-item-label" style="font-size:13px;font-style:italic">"${esc(q.quote.substring(0,60))}${q.quote.length>60?'…':''}"</span>
+                  <span class="sub-item-meta">— ${esc(q.source)}</span>
+                </div>
+                <button class="btn-danger" onclick="deleteQuote('${q.id}','${r.id}')">×</button>
+              </div>`).join('')}
+          </div>
+          <div style="margin-top:12px">
+            <input id="nq-quote-${r.id}" placeholder="Quote text" style="width:100%;background:transparent;border:none;border-bottom:0.5px solid var(--border);padding:8px 0;font-family:var(--fu);font-size:12px;color:var(--cream);outline:none;margin-bottom:8px">
+            <div style="display:flex;gap:8px">
+              <input id="nq-src-${r.id}" placeholder="Source" style="flex:1;background:transparent;border:none;border-bottom:0.5px solid var(--border);padding:8px 0;font-family:var(--fu);font-size:12px;color:var(--cream);outline:none">
+              <button class="btn-small" onclick="addQuote('${r.id}')">Add</button>
+            </div>
+          </div>
+        </div>
+        <div>
+          <p class="sub-title">Tracks</p>
+          <div id="tracks-${r.id}">
+            ${(r.release_tracks||[]).sort((a,b)=>(a.sort_order||0)-(b.sort_order||0)).map(t=>
+              `<div class="sub-item">
+                <div class="sub-item-main">
+                  <span class="sub-item-label">${esc(t.name)}</span>
+                  ${t.feat ? `<span class="sub-item-meta">feat. ${esc(t.feat)}</span>` : ''}
+                </div>
+                <button class="btn-danger" onclick="deleteTrack('${t.id}','${r.id}')">×</button>
+              </div>`).join('')}
+          </div>
+          <div style="margin-top:12px;display:flex;flex-direction:column;gap:8px">
+            <input id="nt-name-${r.id}" placeholder="Track name" style="width:100%;background:transparent;border:none;border-bottom:0.5px solid var(--border);padding:8px 0;font-family:var(--fu);font-size:12px;color:var(--cream);outline:none">
+            <input id="nt-feat-${r.id}" placeholder="feat. (optional)" style="width:100%;background:transparent;border:none;border-bottom:0.5px solid var(--border);padding:8px 0;font-family:var(--fu);font-size:12px;color:var(--cream);outline:none">
+            <div style="display:flex;gap:8px">
+              <input id="nt-url-${r.id}" placeholder="Stream URL" style="flex:1;background:transparent;border:none;border-bottom:0.5px solid var(--border);padding:8px 0;font-family:var(--fu);font-size:12px;color:var(--cream);outline:none">
+              <button class="btn-small" onclick="addTrack('${r.id}')">Add</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <hr class="divider" style="margin:12px 0">
+      <div>
+        <p class="sub-title">Videos</p>
+        <div id="videos-${r.id}">${renderVideosList(r.videos||[], r.id)}</div>
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <input id="nv-title-${r.id}" placeholder="Title" style="width:120px;background:transparent;border:none;border-bottom:0.5px solid var(--border);padding:8px 0;font-family:var(--fu);font-size:12px;color:var(--cream);outline:none">
+          <input id="nv-url-${r.id}" placeholder="YouTube or video URL" style="flex:1;background:transparent;border:none;border-bottom:0.5px solid var(--border);padding:8px 0;font-family:var(--fu);font-size:12px;color:var(--cream);outline:none">
+          <button class="btn-small" onclick="addVideo('${r.id}')">Add</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function renderVideosList(videos, releaseId) {
+  if (!videos.length) return `<p style="font-size:11px;opacity:.25">No videos yet</p>`;
+  return videos.map((v, i) => `
+    <div class="sub-item">
+      <div class="sub-item-main">
+        <span class="sub-item-label">${esc(v.title)}</span>
+        <span class="sub-item-meta" style="word-break:break-all">${esc(v.url)}</span>
+      </div>
+      <button class="btn-danger" onclick="removeVideo('${releaseId}',${i})">×</button>
+    </div>`).join('');
+}
+
+function addVideo(releaseId) {
+  const title = document.getElementById(`nv-title-${releaseId}`).value.trim();
+  const url   = document.getElementById(`nv-url-${releaseId}`).value.trim();
+  if (!title || !url) { toast('Title and URL required'); return; }
+  const rel = mockReleases.find(r => r.id === releaseId);
+  if (!rel) return;
+  rel.videos = [...(rel.videos || []), { title, url }];
+  document.getElementById(`nv-title-${releaseId}`).value = '';
+  document.getElementById(`nv-url-${releaseId}`).value = '';
+  document.getElementById(`videos-${releaseId}`).innerHTML = renderVideosList(rel.videos, releaseId);
+  toast('Video added');
+}
+
+function removeVideo(releaseId, idx) {
+  const rel = mockReleases.find(r => r.id === releaseId);
+  if (!rel) return;
+  rel.videos = (rel.videos || []).filter((_, i) => i !== idx);
+  document.getElementById(`videos-${releaseId}`).innerHTML = renderVideosList(rel.videos, releaseId);
+  toast('Deleted');
+}
+
+const ODESLI_LABELS = {
+  spotify: 'Spotify', appleMusic: 'Apple Music', soundcloud: 'SoundCloud',
+  bandcamp: 'Bandcamp', youtube: 'YouTube', youtubeMusic: 'YouTube Music',
+  tidal: 'Tidal', amazon: 'Amazon Music', deezer: 'Deezer', itunes: 'iTunes',
+  napster: 'Napster', pandora: 'Pandora',
+};
+
+function showReleaseForm(release) {
+  relEditId = release?.id || null;
+  window._releaseLinks = Array.isArray(release?.platform_links) ? [...release.platform_links] : [];
+  document.getElementById('rel-form').innerHTML = `
+    <div class="edit-form">
+      <p class="edit-form-title">${release ? 'Edit release' : 'New release'}</p>
+      <div class="field-row">
+        <div class="field"><label>Title</label><input id="rf-title" value="${esc(release?.title||'')}"></div>
+        <div class="field"><label>Year</label><input id="rf-year" value="${esc(release?.year||'')}" placeholder="2025"></div>
+      </div>
+      <div class="field"><label>Type</label><input id="rf-type" value="${esc(release?.type||'')}" placeholder="Album / EP / Single"></div>
+      <div class="field"><label>Description</label><textarea id="rf-desc">${esc(release?.description||'')}</textarea></div>
+
+      <div style="margin-bottom:24px">
+        <p style="font-size:8px;letter-spacing:.18em;text-transform:uppercase;color:var(--cream);opacity:.4;margin-bottom:10px">Streaming links</p>
+        <div id="rf-links-list">${renderLinksList()}</div>
+
+        <div style="margin-top:16px;padding:16px;background:var(--bg3);border-radius:4px">
+          <p style="font-size:8px;letter-spacing:.16em;text-transform:uppercase;opacity:.3;margin-bottom:10px">Auto-fetch — paste any streaming URL</p>
+          <div style="display:flex;gap:8px">
+            <input id="rf-lookup" placeholder="Spotify, Bandcamp, Apple Music… any link works" style="flex:1;background:transparent;border:none;border-bottom:0.5px solid var(--border);padding:8px 0;font-family:var(--fu);font-size:13px;color:var(--cream);outline:none">
+            <button class="btn-small" id="rf-fetch-btn" onclick="fetchOdesliLinks()">Fetch</button>
+          </div>
+          <div id="rf-fetch-result"></div>
+        </div>
+
+        <div style="margin-top:12px;display:flex;gap:8px;align-items:flex-end">
+          <input id="rf-manual-platform" placeholder="Platform name" style="width:120px;background:transparent;border:none;border-bottom:0.5px solid var(--border);padding:8px 0;font-family:var(--fu);font-size:13px;color:var(--cream);outline:none">
+          <input id="rf-manual-url" placeholder="URL" style="flex:1;background:transparent;border:none;border-bottom:0.5px solid var(--border);padding:8px 0;font-family:var(--fu);font-size:13px;color:var(--cream);outline:none">
+          <button class="btn-small" onclick="addManualLink()">Add manually</button>
+        </div>
+      </div>
+
+      <div class="img-upload-row" style="margin-bottom:20px">
+        ${imgPreviewHtml(release?.cover_art_url, 'rf-preview')}
+        <div class="field"><label>Cover art</label><input type="file" id="rf-img" accept="image/*" onchange="previewImg('rf-img','rf-preview')"></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Sort order</label><input type="number" id="rf-sort" value="${release?.sort_order||0}" style="width:80px"></div>
+        <div class="field-check" style="padding-top:20px">
+          <input type="checkbox" id="rf-visible" ${release?.visible !== false ? 'checked' : ''}>
+          <label for="rf-visible">Visible on site</label>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn-primary" onclick="saveRelease('${esc(release?.cover_art_url||'')}')">Save release</button>
+        <button class="btn-outline" onclick="cancelReleaseForm()">Cancel</button>
+      </div>
+    </div>`;
+  document.getElementById('rel-form').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function renderLinksList() {
+  const links = window._releaseLinks || [];
+  if (!links.length) return `<p style="font-size:11px;opacity:.25;padding:4px 0">No links yet — fetch or add manually below</p>`;
+  return links.map((l, i) => `
+    <div style="display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:0.5px solid rgba(232,224,204,0.05)">
+      <span style="font-size:13px;min-width:110px">${esc(l.platform)}</span>
+      <span style="font-size:11px;opacity:.3;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(l.url)}</span>
+      <button class="btn-danger" onclick="removeReleaseLink(${i})">×</button>
+    </div>`).join('');
+}
+
+function refreshLinksList() {
+  const el = document.getElementById('rf-links-list');
+  if (el) el.innerHTML = renderLinksList();
+}
+
+function removeReleaseLink(idx) {
+  window._releaseLinks.splice(idx, 1);
+  refreshLinksList();
+}
+
+function addManualLink() {
+  const platform = document.getElementById('rf-manual-platform').value.trim();
+  const url      = document.getElementById('rf-manual-url').value.trim();
+  if (!platform || !url) { toast('Platform name and URL required'); return; }
+  if (!window._releaseLinks) window._releaseLinks = [];
+  window._releaseLinks.push({ platform, url });
+  document.getElementById('rf-manual-platform').value = '';
+  document.getElementById('rf-manual-url').value = '';
+  refreshLinksList();
+}
+
+async function fetchOdesliLinks() {
+  const url = document.getElementById('rf-lookup').value.trim();
+  if (!url) { toast('Paste a streaming URL first'); return; }
+  const btn = document.getElementById('rf-fetch-btn');
+  btn.textContent = '…'; btn.disabled = true;
+  await new Promise(r => setTimeout(r, 900));
+  try {
+    const found = [
+      { platform: 'Spotify',      url: 'https://open.spotify.com' },
+      { platform: 'Apple Music',  url: 'https://music.apple.com' },
+      { platform: 'YouTube Music', url: 'https://music.youtube.com' },
+      { platform: 'Tidal',        url: 'https://tidal.com' },
+      { platform: 'Deezer',       url: 'https://deezer.com' },
+      { platform: 'Amazon Music', url: 'https://music.amazon.co.uk' },
+    ];
+    const existing = (window._releaseLinks || []).map(l => l.platform.toLowerCase());
+    const newOnes  = found.filter(l => !existing.includes(l.platform.toLowerCase()));
+    const dupes    = found.filter(l =>  existing.includes(l.platform.toLowerCase()));
+    let html = '';
+    if (dupes.length) html += `<p style="font-size:10px;opacity:.3;margin-top:8px">${dupes.map(l=>l.platform).join(', ')} already added</p>`;
+    if (newOnes.length) {
+      const encoded = esc(JSON.stringify(newOnes));
+      html += `<div style="margin-top:10px">
+        ${newOnes.map((l, i) => `
+          <label style="display:flex;align-items:center;gap:8px;padding:5px 0;cursor:pointer;font-size:12px">
+            <input type="checkbox" checked data-odesli-idx="${i}" style="accent-color:var(--cream)">
+            <span style="min-width:110px">${esc(l.platform)}</span>
+            <span style="opacity:.3;font-size:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(l.url)}</span>
+          </label>`).join('')}
+        <button class="btn-small" style="margin-top:10px" onclick="applyOdesliLinks(${encoded})">Add selected</button>
+      </div>`;
+    } else if (!dupes.length) {
+      html = `<p style="font-size:10px;opacity:.3;margin-top:8px">No new platforms found</p>`;
+    }
+    document.getElementById('rf-fetch-result').innerHTML = html;
+  } catch {
+    toast('Could not fetch — check the URL');
+  } finally {
+    btn.textContent = 'Fetch'; btn.disabled = false;
+  }
+}
+
+function applyOdesliLinks(links) {
+  if (typeof links === 'string') links = JSON.parse(links);
+  const checkboxes = document.querySelectorAll('[data-odesli-idx]');
+  if (!window._releaseLinks) window._releaseLinks = [];
+  checkboxes.forEach(cb => {
+    if (cb.checked) {
+      const l = links[parseInt(cb.dataset.odesliIdx)];
+      if (l) window._releaseLinks.push(l);
+    }
+  });
+  document.getElementById('rf-fetch-result').innerHTML = `<p style="font-size:10px;opacity:.4;margin-top:8px">Added ✓</p>`;
+  document.getElementById('rf-lookup').value = '';
+  refreshLinksList();
+}
+
+function cancelReleaseForm() {
+  document.getElementById('rel-form').innerHTML = '';
+  relEditId = null;
+  window._releaseLinks = null;
+}
+
+async function saveRelease(existingArtUrl) {
+  const title = document.getElementById('rf-title').value.trim();
+  const year  = document.getElementById('rf-year').value.trim();
+  if (!title || !year) { toast('Title and year are required'); return; }
+
+  let coverArtUrl = existingArtUrl;
+  const imgFile = document.getElementById('rf-img')?.files?.[0];
+  if (imgFile) coverArtUrl = await uploadImage(imgFile);
+
+  const platformLinks = window._releaseLinks || [];
+  const spotifyLink   = platformLinks.find(l => l.platform === 'Spotify');
+  const bandcampLink  = platformLinks.find(l => l.platform === 'Bandcamp');
+
+  const payload = {
+    title, year,
+    type:           document.getElementById('rf-type').value.trim(),
+    description:    document.getElementById('rf-desc').value.trim(),
+    platform_links: platformLinks,
+    spotify_url:    spotifyLink?.url  || '',
+    bandcamp_url:   bandcampLink?.url || '',
+    cover_art_url:  coverArtUrl,
+    sort_order:     parseInt(document.getElementById('rf-sort').value) || 0,
+    visible:        document.getElementById('rf-visible').checked,
+  };
+
+  if (relEditId) {
+    const idx = mockReleases.findIndex(r => r.id === relEditId);
+    if (idx >= 0) mockReleases[idx] = { ...mockReleases[idx], ...payload };
+  } else {
+    mockReleases.push({ id: uid(), release_quotes: [], release_tracks: [], videos: [], ...payload });
+  }
+  toast(relEditId ? 'Release updated' : 'Release added');
+  cancelReleaseForm();
+  loadReleases();
+}
+
+function deleteRelease(id) {
+  if (!confirm('Delete this release and all its tracks and quotes?')) return;
+  mockReleases = mockReleases.filter(r => r.id !== id);
+  toast('Deleted');
+  loadReleases();
+}
+
+function addQuote(releaseId) {
+  const quote  = document.getElementById(`nq-quote-${releaseId}`).value.trim();
+  const source = document.getElementById(`nq-src-${releaseId}`).value.trim();
+  if (!quote || !source) { toast('Quote and source required'); return; }
+  const rel = mockReleases.find(r => r.id === releaseId);
+  if (!rel) return;
+  const so = (rel.release_quotes || []).reduce((m, q) => Math.max(m, q.sort_order || 0), 0) + 1;
+  rel.release_quotes = [...(rel.release_quotes || []), { id: uid(), release_id: releaseId, quote, source, sort_order: so }];
+  document.getElementById(`nq-quote-${releaseId}`).value = '';
+  document.getElementById(`nq-src-${releaseId}`).value = '';
+  toast('Quote added');
+  refreshReleaseSubitems(releaseId);
+}
+
+function deleteQuote(quoteId, releaseId) {
+  const rel = mockReleases.find(r => r.id === releaseId);
+  if (!rel) return;
+  rel.release_quotes = (rel.release_quotes || []).filter(q => q.id !== quoteId);
+  toast('Deleted');
+  refreshReleaseSubitems(releaseId);
+}
+
+function addTrack(releaseId) {
+  const name      = document.getElementById(`nt-name-${releaseId}`).value.trim();
+  const feat      = document.getElementById(`nt-feat-${releaseId}`).value.trim();
+  const streamUrl = document.getElementById(`nt-url-${releaseId}`).value.trim();
+  if (!name || !streamUrl) { toast('Track name and URL required'); return; }
+  const rel = mockReleases.find(r => r.id === releaseId);
+  if (!rel) return;
+  const so = (rel.release_tracks || []).reduce((m, t) => Math.max(m, t.sort_order || 0), 0) + 1;
+  rel.release_tracks = [...(rel.release_tracks || []), { id: uid(), release_id: releaseId, name, feat: feat||null, stream_url: streamUrl, sort_order: so }];
+  document.getElementById(`nt-name-${releaseId}`).value = '';
+  document.getElementById(`nt-feat-${releaseId}`).value = '';
+  document.getElementById(`nt-url-${releaseId}`).value = '';
+  toast('Track added');
+  refreshReleaseSubitems(releaseId);
+}
+
+function deleteTrack(trackId, releaseId) {
+  const rel = mockReleases.find(r => r.id === releaseId);
+  if (!rel) return;
+  rel.release_tracks = (rel.release_tracks || []).filter(t => t.id !== trackId);
+  toast('Deleted');
+  refreshReleaseSubitems(releaseId);
+}
+
+function refreshReleaseSubitems(releaseId) {
+  const rel = mockReleases.find(r => r.id === releaseId);
+  if (!rel) return;
+  const qtEl = document.getElementById(`quotes-${releaseId}`);
+  const trEl = document.getElementById(`tracks-${releaseId}`);
+  if (qtEl) qtEl.innerHTML = (rel.release_quotes||[]).sort((a,b)=>(a.sort_order||0)-(b.sort_order||0)).map(q=>
+    `<div class="sub-item">
+      <div class="sub-item-main">
+        <span class="sub-item-label" style="font-size:13px;font-style:italic">"${esc(q.quote.substring(0,60))}${q.quote.length>60?'…':''}"</span>
+        <span class="sub-item-meta">— ${esc(q.source)}</span>
+      </div>
+      <button class="btn-danger" onclick="deleteQuote('${q.id}','${releaseId}')">×</button>
+    </div>`).join('');
+  if (trEl) trEl.innerHTML = (rel.release_tracks||[]).sort((a,b)=>(a.sort_order||0)-(b.sort_order||0)).map(t=>
+    `<div class="sub-item">
+      <div class="sub-item-main">
+        <span class="sub-item-label">${esc(t.name)}</span>
+        ${t.feat ? `<span class="sub-item-meta">feat. ${esc(t.feat)}</span>` : ''}
+      </div>
+      <button class="btn-danger" onclick="deleteTrack('${t.id}','${releaseId}')">×</button>
+    </div>`).join('');
+}
+
+/* ═══════════════════════════════════════════════════════════
+   ABOUT
+═══════════════════════════════════════════════════════════ */
+function loadAbout() {
+  const panel = document.getElementById('panel');
+  panel.innerHTML = `<div class="section-head"><h2 class="section-title">About</h2></div><div id="about-content"></div>`;
+  renderAboutForm(mockAbout);
+}
+
+function renderAboutForm(d) {
+  const press = Array.isArray(d?.press_names) ? d.press_names.join('\n') : (d?.press_names||'');
+  const ach   = Array.isArray(d?.achievements) ? d.achievements.join('\n') : (d?.achievements||'');
+  document.getElementById('about-content').innerHTML = `
+    <div class="edit-form" style="background:transparent;border:none;padding:0">
+      <div class="img-upload-row" style="margin-bottom:28px">
+        ${imgPreviewHtml(d?.portrait_url, 'ab-preview')}
+        <div class="field"><label>Portrait photo</label><input type="file" id="ab-img" accept="image/*" onchange="previewImg('ab-img','ab-preview')"></div>
+      </div>
+      <div class="field"><label>Featured quote</label><textarea id="ab-quote" style="min-height:60px">${esc(d?.quote||'')}</textarea></div>
+      <div class="field"><label>Quote source</label><input id="ab-qsrc" value="${esc(d?.quote_source||'')}"></div>
+      <div class="field"><label>Bio</label><textarea id="ab-bio" style="min-height:180px">${esc(d?.bio||'')}</textarea></div>
+      <div class="field-row">
+        <div class="field"><label>Press names (one per line)</label><textarea id="ab-press" style="min-height:120px">${esc(press)}</textarea></div>
+        <div class="field"><label>Achievements (one per line)</label><textarea id="ab-ach" style="min-height:120px">${esc(ach)}</textarea></div>
+      </div>
+      <div class="field"><label>Contact / booking email</label><input id="ab-email" value="${esc(d?.contact_email||'mgmt.mfn@gmail.com')}"></div>
+      <div class="btn-row">
+        <button class="btn-primary" onclick="saveAbout('${esc(d?.portrait_url||'')}')">Save about</button>
+      </div>
+    </div>`;
+}
+
+async function saveAbout(existingPortraitUrl) {
+  let portraitUrl = existingPortraitUrl;
+  const imgFile = document.getElementById('ab-img')?.files?.[0];
+  if (imgFile) portraitUrl = await uploadImage(imgFile);
+
+  mockAbout = {
+    ...mockAbout,
+    quote:         document.getElementById('ab-quote').value.trim(),
+    quote_source:  document.getElementById('ab-qsrc').value.trim(),
+    bio:           document.getElementById('ab-bio').value.trim(),
+    portrait_url:  portraitUrl,
+    contact_email: document.getElementById('ab-email').value.trim(),
+    press_names:   document.getElementById('ab-press').value.split('\n').map(s=>s.trim()).filter(Boolean),
+    achievements:  document.getElementById('ab-ach').value.split('\n').map(s=>s.trim()).filter(Boolean),
+  };
+  toast('About saved');
+}
+
+/* ═══════════════════════════════════════════════════════════
+   SETTINGS
+═══════════════════════════════════════════════════════════ */
+function loadSettings() {
+  const panel = document.getElementById('panel');
+  panel.innerHTML = `<div class="section-head"><h2 class="section-title">Settings</h2></div><div id="settings-content"></div>`;
+  renderSettings();
+}
+
+function renderSettings() {
+  document.getElementById('settings-content').innerHTML = `
+    <div class="edit-form" style="background:transparent;border:none;padding:0;max-width:520px">
+      <div class="field"><label>Booking email</label><input id="st-booking" value="${esc(mockSettings.booking_email)}"></div>
+      <div class="field"><label>Stripe restricted key <span style="opacity:.4;font-weight:400">(read-only, Products + Prices)</span></label><input id="st-stripe" value="${esc(mockSettings.stripe_key)}" placeholder="rk_live_…"></div>
+      <div class="btn-row" style="margin-bottom:40px">
+        <button class="btn-primary" onclick="saveSettings()">Save settings</button>
+      </div>
+    </div>
+    <hr class="divider">
+    <h3 style="font-family:var(--fd);font-style:italic;font-size:22px;margin-bottom:24px">Stream links</h3>
+    <div id="stream-links-list" style="max-width:520px">
+      ${mockStreamLinks.map(l => `
+        <div class="sub-item" id="stl-${l.id}">
+          <div class="sub-item-main">
+            <span class="sub-item-label">${esc(l.platform)}</span>
+            <span class="sub-item-meta" style="word-break:break-all">${esc(l.url)}</span>
+          </div>
+          <button class="btn-danger" onclick="deleteStreamLink('${l.id}')">Delete</button>
+        </div>`).join('')}
+    </div>
+    <div style="margin-top:20px;max-width:520px">
+      <div class="field-row">
+        <div class="field"><label>Platform name</label><input id="stl-platform" placeholder="Spotify"></div>
+        <div class="field"><label>URL</label><input id="stl-url" placeholder="https://…"></div>
+      </div>
+      <button class="btn-outline" onclick="addStreamLink()">+ Add link</button>
+    </div>`;
+}
+
+function saveSettings() {
+  mockSettings.booking_email = document.getElementById('st-booking').value.trim();
+  mockSettings.stripe_key    = document.getElementById('st-stripe').value.trim();
+  toast('Settings saved');
+}
+
+function addStreamLink() {
+  const platform = document.getElementById('stl-platform').value.trim();
+  const url      = document.getElementById('stl-url').value.trim();
+  if (!platform || !url) { toast('Platform and URL required'); return; }
+  mockStreamLinks.push({ id: uid(), platform, url, sort_order: mockStreamLinks.length + 1 });
+  toast('Link added');
+  renderSettings();
+}
+
+function deleteStreamLink(id) {
+  mockStreamLinks = mockStreamLinks.filter(l => l.id !== id);
+  toast('Deleted');
+  renderSettings();
+}
+
+/* ═══════════════════════════════════════════════════════════
+   HOME — PETAL MEDIA
+═══════════════════════════════════════════════════════════ */
+const PETAL_ORDER = ['world','about','shows','shop','tbd','stream'];
+
+function loadHome() {
+  const panel = document.getElementById('panel');
+  panel.innerHTML = `
+    <div class="section-head">
+      <h2 class="section-title">Home · Petal Media</h2>
+    </div>
+    <p style="font-size:11px;opacity:.35;margin-bottom:24px;letter-spacing:0.04em">
+      Upload a photo for each petal. Images appear on the home screen when that petal is highlighted.
+    </p>
+    <div class="petal-grid" id="petal-grid">
+      ${PETAL_ORDER.map(section => {
+        const row = mockPetalMedia.find(m => m.section === section) || { section, label: section, photo_url: '' };
+        const thumb = row.photo_url
+          ? `<img src="${esc(row.photo_url)}" alt="${esc(row.label)}">`
+          : `<span style="opacity:.2;font-size:11px;letter-spacing:.08em;text-transform:uppercase">No photo</span>`;
+        return `
+          <div class="petal-card">
+            <div class="petal-thumb" id="pt-${section}">${thumb}</div>
+            <div class="petal-card-body">
+              <span class="petal-section-label">${esc(row.label)}</span>
+              <label class="petal-upload-btn">
+                Upload
+                <input type="file" accept="image/*" style="display:none"
+                  onchange="uploadPetalPhoto(this,'${section}','${esc(row.label)}')">
+              </label>
+            </div>
+            <div class="petal-upload-status" id="pus-${section}"></div>
+          </div>`;
+      }).join('')}
+    </div>`;
+}
+
+async function uploadPetalPhoto(input, section, label) {
+  const file = input.files[0];
+  if (!file) return;
+  const status = document.getElementById(`pus-${section}`);
+  status.textContent = 'Uploading…';
+  const url = await uploadImage(file);
+  const row = mockPetalMedia.find(m => m.section === section);
+  if (row) row.photo_url = url;
+  const thumb = document.getElementById(`pt-${section}`);
+  thumb.innerHTML = `<img src="${url}" alt="${esc(label)}">`;
+  status.textContent = 'Updated';
+  setTimeout(() => { status.textContent = ''; }, 3000);
+  toast(`${label} photo updated`);
+}
+
+/* ─── BOOT ───────────────────────────────────────────────── */
+init();
+</script>
+</body>
+</html>
