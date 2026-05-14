@@ -282,11 +282,49 @@ label.petal-upload-btn:hover { opacity: 1; border-color: var(--cream); }
 }
 
 /* ── Responsive ── */
-@media (max-width: 600px) {
-  #panel { padding: 24px 20px 60px; }
-  nav.tabs { padding: 0 16px; }
-  header { padding: 0 20px; }
+@media (max-width: 640px) {
+  header { padding: 0 16px; }
+  .header-user { display: none; }
+  nav.tabs { padding: 0 12px; }
+  .tab-btn { padding: 14px 12px; font-size: 8px; }
+
+  #panel { padding: 24px 16px 60px; }
+
+  .login-card { padding: 40px 24px; }
+
   .field-row, .field-row3 { grid-template-columns: 1fr; }
+  .field-check { padding-top: 8px; }
+
+  .section-head { flex-wrap: wrap; gap: 12px; align-items: flex-start; }
+  .section-title { font-size: 26px; }
+
+  .edit-form { padding: 20px 14px; }
+
+  /* Tables scroll horizontally rather than overflowing */
+  .list-table { display: block; width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+  .td-actions { gap: 8px; }
+
+  /* Image upload row stacks vertically */
+  .img-upload-row { flex-direction: column; align-items: flex-start; gap: 12px; }
+  .img-upload-row .field { width: 100%; }
+
+  /* Petal grid — 2 columns on mobile, 1 on very small */
+  .petal-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+
+  /* Release quotes/tracks 2-col → 1-col */
+  .rel-grid { grid-template-columns: 1fr !important; }
+
+  /* Sub-items truncate gracefully */
+  .sub-item-meta { word-break: break-word; white-space: normal; }
+
+  /* Btn row wraps tightly */
+  .btn-row { gap: 8px; }
+}
+
+@media (max-width: 380px) {
+  .petal-grid { grid-template-columns: 1fr; }
+  .tab-btn { padding: 14px 9px; letter-spacing: 0.12em; }
 }
 </style>
 </head>
@@ -753,7 +791,7 @@ function renderReleaseList(releases) {
         </div>
       </div>
       <hr class="divider" style="margin:16px 0">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
+      <div class="rel-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
         <div>
           <p class="sub-title">Quotes</p>
           <div id="quotes-${r.id}">
