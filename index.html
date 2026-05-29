@@ -332,39 +332,34 @@ a { text-decoration: none; color: inherit; }
 /* ═══════════════════════════════════
    SECTION: ABOUT
 ═══════════════════════════════════ */
-.about-hero { padding-top: 20px; margin-bottom: 36px; }
-.about-title {
-  font-family: var(--fd); font-style: italic; font-weight: 700;
-  font-size: clamp(72px, 22vw, 160px);
-  line-height: 0.82; letter-spacing: -0.03em; color: var(--cream);
-  margin-left: -2px;
+.about-wrap { padding-top: 24px; user-select: none; -webkit-user-select: none; }
+#about-circle-zone { position: relative; margin: 0 auto 48px; }
+.about-portrait-circle {
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%; overflow: hidden;
+  border: 0.5px solid rgba(232,224,204,0.15);
+  z-index: 1; pointer-events: none;
 }
-
-/* Portrait — organic clip */
-.about-portrait {
-  width: 100%; max-width: 420px; aspect-ratio: 3/4; margin-bottom: 28px;
-  border-radius: 4px; overflow: hidden;
-  /* CONTENT: Replace with real portrait <img> */
-  background: linear-gradient(160deg,#1a2a14,#3a5024 50%,#5a7840);
+.about-portrait-circle img { width:100%; height:100%; object-fit:cover; display:block; }
+#about-rings-svg {
+  position: absolute; top: 0; left: 0;
+  touch-action: none; cursor: grab; z-index: 2;
 }
-.about-portrait img { width:100%; height:100%; object-fit:cover; }
-
+#about-rings-svg:active { cursor: grabbing; }
+.about-lower { text-align: center; }
 .about-quote {
   font-family: var(--fd); font-style: italic;
-  font-size: clamp(18px, 4.5vw, 26px);
-  color: var(--cream); line-height: 1.45;
-  border-left: 1px solid rgba(232,224,204,0.3);
-  padding-left: 18px; margin-bottom: 6px;
+  font-size: clamp(16px, 4vw, 22px);
+  color: var(--cream); line-height: 1.5;
+  padding: 0 12px; margin-bottom: 6px;
 }
 .about-quote-src {
   font-size: 8px; font-weight: 400; letter-spacing: 0.16em;
   text-transform: uppercase; color: var(--cream); opacity: 0.3;
-  padding-left: 18px; margin-bottom: 28px; display: block;
+  margin-bottom: 28px; display: block;
 }
-.about-bio {
-  font-size: 16px; font-weight: 300; line-height: 2.0;
-  color: var(--cream); opacity: 0.65; margin-bottom: 32px;
-}
+.about-lower .achievements { text-align: left; }
 
 /* Press marquee */
 .press-marquee-wrap {
@@ -1120,67 +1115,56 @@ const sections = {
   about: {
     name: 'About',
     html: `
-      <div class="about-hero">
-        <h2 class="about-title">About</h2>
-      </div>
-      <div class="about-portrait"><img src="Brand Assets/MFN graded/DSCF3822.jpg" alt="mau from nowhere"></div>
-      <blockquote class="about-quote">"mau from nowhere has the innate ability to make you feel seen and validated through his vulnerability. He lets you in and in doing so creates an environment that is real and non-judgmental."</blockquote>
-      <span class="about-quote-src">Tangaza Magazine</span>
-      <p class="about-bio">
-        mau from nowhere blends hip-hop, R&amp;B, and electronic textures into a soulful,
-        genre-bending sound shaped between Nairobi, the UK, and the Netherlands.
-        His music is both urgent and meditative &mdash; weaving melodic raps with reflective
-        songwriting, drawing comparisons to Obongjayar, Noname, and Yinka Bernie,
-        with influences spanning Outkast to Bloc Party.
-        <br><br>
-        Born Kamau Wainaina in Nairobi, raised between Kenya, the UK and the Netherlands,
-        mau's music reflects a life spent oscillating between worlds &mdash; never quite staying
-        in one place, finding comfort instead in the clarity of his craft.
-        His 2025 collaborative album PRESSURE with producer hihi earned global attention
-        from OkayAfrica, Dead Good Music, and 24 Hip-Hop. His 2024 EP SOFT STEPS was
-        praised by CLASH, Atwood Magazine, and 1883. Named Apple Music's East African
-        Up Next Artist (May 2023) and spotlighted on COLORS.
-      </p>
-      <div class="press-marquee-wrap">
-        <div class="press-marquee-track">
-          <span class="press-name">OkayAfrica</span>
-          <span class="press-name">CLASH</span>
-          <span class="press-name">1883 Magazine</span>
-          <span class="press-name">Atwood Magazine</span>
-          <span class="press-name">Wordplay Magazine</span>
-          <span class="press-name">Music Crowns</span>
-          <span class="press-name">Rotate Magazine</span>
-          <span class="press-name">24 Hip-Hop</span>
-          <span class="press-name">Kilele Magazine</span>
-          <span class="press-name">Tangaza Magazine</span>
-          <span class="press-name">Dead Good Music</span>
-          <span class="press-name">Forbes</span>
-          <span class="press-name">Mixtape Madness</span>
-          <span class="press-name">PAM</span>
-          <span class="press-name">OkayAfrica</span>
-          <span class="press-name">CLASH</span>
-          <span class="press-name">1883 Magazine</span>
-          <span class="press-name">Atwood Magazine</span>
-          <span class="press-name">Wordplay Magazine</span>
-          <span class="press-name">Music Crowns</span>
-          <span class="press-name">Rotate Magazine</span>
-          <span class="press-name">24 Hip-Hop</span>
-          <span class="press-name">Kilele Magazine</span>
-          <span class="press-name">Tangaza Magazine</span>
-          <span class="press-name">Dead Good Music</span>
-          <span class="press-name">Forbes</span>
-          <span class="press-name">Mixtape Madness</span>
-          <span class="press-name">PAM</span>
+      <div class="about-wrap">
+        <div id="about-circle-zone"
+          data-portrait-url="Brand Assets/MFN graded/DSCF3822.jpg"
+          data-bio="mau from nowhere blends hip-hop, R&amp;B, and electronic textures into a soulful, genre-bending sound shaped between Nairobi, the UK, and the Netherlands. His music is both urgent and meditative — weaving melodic raps with reflective songwriting, drawing comparisons to Obongjayar, Noname, and Yinka Bernie, with influences spanning Outkast to Bloc Party. Born Kamau Wainaina in Nairobi, raised between Kenya, the UK and the Netherlands, mau's music reflects a life spent oscillating between worlds — never quite staying in one place, finding comfort instead in the clarity of his craft. His 2025 collaborative album PRESSURE with producer hihi earned global attention from OkayAfrica, Dead Good Music, and 24 Hip-Hop. His 2024 EP SOFT STEPS was praised by CLASH, Atwood Magazine, and 1883. Named Apple Music's East African Up Next Artist (May 2023) and spotlighted on COLORS.">
         </div>
-      </div>
-      <div class="achievements">
-        <div class="achievement"><div class="ach-dot"></div><p class="ach-text">Apple Music Up Next Artist &mdash; May 2023</p></div>
-        <div class="achievement"><div class="ach-dot"></div><p class="ach-text">PRESSURE (2025) with hihi &mdash; global press attention across four continents</p></div>
-        <div class="achievement"><div class="ach-dot"></div><p class="ach-text">Known for intimate yet powerful live performances &mdash; from Nairobi club floors to festival stages across the UK and Europe</p></div>
-      </div>
-      <div style="display:flex;gap:10px;flex-wrap:wrap;padding-bottom:40px">
-        <a href="mailto:mgmt.mfn@gmail.com?subject=EPK%20Request" target="_blank" class="btn-cream">&#8595; Download EPK</a>
-        <a href="mailto:mgmt.mfn@gmail.com" class="btn-outline">Get in touch</a>
+        <div class="about-lower">
+          <blockquote class="about-quote">"mau from nowhere has the innate ability to make you feel seen and validated through his vulnerability. He lets you in and in doing so creates an environment that is real and non-judgmental."</blockquote>
+          <span class="about-quote-src">Tangaza Magazine</span>
+          <div class="press-marquee-wrap">
+            <div class="press-marquee-track">
+              <span class="press-name">OkayAfrica</span>
+              <span class="press-name">CLASH</span>
+              <span class="press-name">1883 Magazine</span>
+              <span class="press-name">Atwood Magazine</span>
+              <span class="press-name">Wordplay Magazine</span>
+              <span class="press-name">Music Crowns</span>
+              <span class="press-name">Rotate Magazine</span>
+              <span class="press-name">24 Hip-Hop</span>
+              <span class="press-name">Kilele Magazine</span>
+              <span class="press-name">Tangaza Magazine</span>
+              <span class="press-name">Dead Good Music</span>
+              <span class="press-name">Forbes</span>
+              <span class="press-name">Mixtape Madness</span>
+              <span class="press-name">PAM</span>
+              <span class="press-name">OkayAfrica</span>
+              <span class="press-name">CLASH</span>
+              <span class="press-name">1883 Magazine</span>
+              <span class="press-name">Atwood Magazine</span>
+              <span class="press-name">Wordplay Magazine</span>
+              <span class="press-name">Music Crowns</span>
+              <span class="press-name">Rotate Magazine</span>
+              <span class="press-name">24 Hip-Hop</span>
+              <span class="press-name">Kilele Magazine</span>
+              <span class="press-name">Tangaza Magazine</span>
+              <span class="press-name">Dead Good Music</span>
+              <span class="press-name">Forbes</span>
+              <span class="press-name">Mixtape Madness</span>
+              <span class="press-name">PAM</span>
+            </div>
+          </div>
+          <div class="achievements">
+            <div class="achievement"><div class="ach-dot"></div><p class="ach-text">Apple Music Up Next Artist &mdash; May 2023</p></div>
+            <div class="achievement"><div class="ach-dot"></div><p class="ach-text">PRESSURE (2025) with hihi &mdash; global press attention across four continents</p></div>
+            <div class="achievement"><div class="ach-dot"></div><p class="ach-text">Known for intimate yet powerful live performances &mdash; from Nairobi club floors to festival stages across the UK and Europe</p></div>
+          </div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;padding-bottom:40px">
+            <a href="mailto:mgmt.mfn@gmail.com?subject=EPK%20Request" target="_blank" class="btn-cream">&#8595; Download EPK</a>
+            <a href="mailto:mgmt.mfn@gmail.com" class="btn-outline">Get in touch</a>
+          </div>
+        </div>
       </div>
     `
   },
@@ -1368,19 +1352,203 @@ function renderAbout(d) {
   const marquee = [...names, ...names].map(n => `<span class="press-name">${esc(n)}</span>`).join('');
   const ach = (Array.isArray(d.achievements) ? d.achievements : [])
     .map(a => `<div class="achievement"><div class="ach-dot"></div><p class="ach-text">${esc(a)}</p></div>`).join('');
-  const portrait = d.portrait_url ? `<img src="${esc(d.portrait_url)}" alt="mau from nowhere">` : '';
   const email = esc(d.contact_email || 'mgmt.mfn@gmail.com');
-  return `<div class="about-hero"><h2 class="about-title">About</h2></div>
-    <div class="about-portrait">${portrait}</div>
-    <blockquote class="about-quote">"${esc(d.quote)}"</blockquote>
-    <span class="about-quote-src">${esc(d.quote_source)}</span>
-    <p class="about-bio">${esc(d.bio).replace(/\n\n/g,'<br><br>')}</p>
-    <div class="press-marquee-wrap"><div class="press-marquee-track">${marquee}</div></div>
-    <div class="achievements">${ach}</div>
-    <div style="display:flex;gap:10px;flex-wrap:wrap;padding-bottom:40px">
-      <a href="mailto:${email}?subject=EPK%20Request" target="_blank" class="btn-cream">&#8595; Download EPK</a>
-      <a href="mailto:${email}" class="btn-outline">Get in touch</a>
-    </div>`;
+  return `<div class="about-wrap">
+    <div id="about-circle-zone" data-portrait-url="${esc(d.portrait_url||'')}" data-bio="${esc(d.bio||'')}"></div>
+    <div class="about-lower">
+      <blockquote class="about-quote">"${esc(d.quote)}"</blockquote>
+      <span class="about-quote-src">${esc(d.quote_source)}</span>
+      <div class="press-marquee-wrap"><div class="press-marquee-track">${marquee}</div></div>
+      <div class="achievements">${ach}</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;padding-bottom:40px">
+        <a href="mailto:${email}?subject=EPK%20Request" target="_blank" class="btn-cream">&#8595; Download EPK</a>
+        <a href="mailto:${email}" class="btn-outline">Get in touch</a>
+      </div>
+    </div>
+  </div>`;
+}
+
+function initAbout() {
+  const zone = document.getElementById('about-circle-zone');
+  if (!zone) return;
+
+  const portraitUrl = zone.dataset.portraitUrl || '';
+  const bioText     = zone.dataset.bio || '';
+
+  const vw     = window.innerWidth;
+  const isTiny = vw < 400;
+
+  // Portrait: proportion of available width, clamped to reasonable range
+  const contentW  = Math.min(vw - 56, 800);
+  const diam      = Math.max(180, Math.min(Math.round(contentW * 0.42), 340));
+  const portraitR = diam / 2;
+
+  const gap        = 3;                              // portrait edge → first ring
+  const step       = isTiny ? 13 : 14;
+  const r0         = portraitR + gap;
+  const b          = step / (2 * Math.PI);
+  const AVG_CHAR_W = 8.3;                            // 13px Jost + 0.06em
+  const totalPx    = bioText.length * AVG_CHAR_W;
+  const maxR       = contentW / 2 - 6;
+
+  // Count turns outward from portrait until text fits, capped at available width
+  let numTurns = 0, arcLen = 0;
+  while (arcLen < totalPx * 1.05) {
+    const avgR = r0 + step * (numTurns + 0.5);
+    if (avgR > maxR) break;
+    arcLen += 2 * Math.PI * avgR;
+    numTurns++;
+  }
+  numTurns = Math.max(1, numTurns);
+
+  // SVG sized to fit exactly — portrait + text rings + small margin
+  const rMax    = Math.min(r0 + step * numTurns, maxR);
+  const svgSize = Math.min(Math.round((rMax + 16) * 2), contentW);
+  const cx = svgSize / 2;
+  const cy = svgSize / 2;
+
+  zone.style.width  = svgSize + 'px';
+  zone.style.height = svgSize + 'px';
+
+  // Portrait (centred, non-interactive)
+  const portrait = document.createElement('div');
+  portrait.className = 'about-portrait-circle';
+  portrait.style.width  = diam + 'px';
+  portrait.style.height = diam + 'px';
+  if (portraitUrl) {
+    const img = document.createElement('img');
+    img.src = portraitUrl;
+    img.alt = 'mau from nowhere';
+    portrait.appendChild(img);
+  }
+  zone.appendChild(portrait);
+
+  // Build Archimedean spiral: r = rMax - b·θ, outer→inner like a record
+  const NS       = 'http://www.w3.org/2000/svg';
+  const thetaMax = numTurns * 2 * Math.PI;
+  const numPts   = Math.max(300, numTurns * 120);
+  const pts      = [];
+  for (let i = 0; i <= numPts; i++) {
+    const theta = (i / numPts) * thetaMax;
+    const r     = rMax - b * theta;
+    const x     = cx + r * Math.cos(theta - Math.PI / 2);
+    const y     = cy + r * Math.sin(theta - Math.PI / 2);
+    pts.push(`${i === 0 ? 'M' : 'L'}${x.toFixed(2)},${y.toFixed(2)}`);
+  }
+
+  const svg = document.createElementNS(NS, 'svg');
+  svg.id = 'about-rings-svg';
+  svg.setAttribute('width',   svgSize);
+  svg.setAttribute('height',  svgSize);
+  svg.setAttribute('viewBox', `0 0 ${svgSize} ${svgSize}`);
+
+  const g = document.createElementNS(NS, 'g');
+  g.id = 'about-rings-g';
+
+  const spiralPath = document.createElementNS(NS, 'path');
+  spiralPath.id = 'about-spiral-path';
+  spiralPath.setAttribute('d', pts.join(' '));
+  spiralPath.setAttribute('fill',   'none');
+  spiralPath.setAttribute('stroke', 'none');
+
+  const text = document.createElementNS(NS, 'text');
+  text.setAttribute('font-family',    "'Jost', sans-serif");
+  text.setAttribute('font-size',      '13');
+  text.setAttribute('font-weight',    '300');
+  text.setAttribute('letter-spacing', '0.06em');
+  text.setAttribute('fill',           'rgba(232,224,204,0.6)');
+
+  const tp = document.createElementNS(NS, 'textPath');
+  tp.setAttribute('href', '#about-spiral-path');
+  tp.setAttribute('startOffset', '0%');
+  tp.textContent = bioText;
+
+  text.appendChild(tp);
+  g.appendChild(spiralPath);
+  g.appendChild(text);
+  svg.appendChild(g);
+  zone.appendChild(svg);
+
+  // Rotation state
+  let angle    = 0;
+  let lastA    = 0;
+  let vel      = 0;
+  let lastT    = 0;
+  let dragging = false;
+  let raf      = null;
+
+  function ptrAngle(e) {
+    const r = zone.getBoundingClientRect();
+    return Math.atan2(e.clientY - (r.top  + r.height / 2),
+                      e.clientX - (r.left + r.width  / 2)) * 180 / Math.PI;
+  }
+
+  function applyAngle() {
+    g.setAttribute('transform', `rotate(${angle},${cx},${cy})`);
+  }
+
+  function coast() {
+    if (Math.abs(vel) < 0.02) { vel = 0; return; }
+    angle += vel;
+    vel   *= 0.96;
+    applyAngle();
+    raf = requestAnimationFrame(coast);
+  }
+
+  function applyDelta(e) {
+    const a   = ptrAngle(e);
+    let delta = a - lastA;
+    if (delta >  180) delta -= 360;
+    if (delta < -180) delta += 360;
+    const now = performance.now();
+    const dt  = now - lastT;
+    // EMA-smooth velocity to kill per-frame noise
+    vel   = vel * 0.5 + (dt > 0 ? delta / dt * 16 : 0) * 0.5;
+    angle += delta;
+    lastA  = a;
+    lastT  = now;
+    applyAngle();
+  }
+
+  // Fine pointer (mouse): rotate from anywhere on screen
+  if (window.matchMedia('(pointer: fine)').matches) {
+    let seeded    = false;
+    let idleTimer = null;
+
+    document.addEventListener('mousemove', e => {
+      if (idleTimer) clearTimeout(idleTimer);
+      if (raf) { cancelAnimationFrame(raf); raf = null; }
+
+      if (!seeded) {
+        seeded = true;
+        lastA  = ptrAngle(e);
+        lastT  = performance.now();
+        return;
+      }
+
+      applyDelta(e);
+
+      // Coast briefly after mouse stops
+      idleTimer = setTimeout(() => { raf = requestAnimationFrame(coast); }, 120);
+    });
+  } else {
+    // Touch / pen: drag to rotate
+    svg.addEventListener('pointerdown', e => {
+      dragging = true;
+      lastA = ptrAngle(e);
+      lastT = performance.now();
+      vel   = 0;
+      if (raf) cancelAnimationFrame(raf);
+      svg.setPointerCapture(e.pointerId);
+      e.preventDefault();
+    });
+    svg.addEventListener('pointermove', e => {
+      if (!dragging) return;
+      applyDelta(e);
+    });
+    svg.addEventListener('pointerup',     () => { dragging = false; raf = requestAnimationFrame(coast); });
+    svg.addEventListener('pointercancel', () => { dragging = false; });
+  }
 }
 
 function renderShows(shows, bookingEmail) {
@@ -1488,6 +1656,7 @@ function openSection(id) {
   if (!sec) return;
 
   content.innerHTML = sec.html;
+  if (id === 'about') initAbout();
   overlay.classList.add('open');
   home.classList.add('hidden');
   overlay.scrollTop = 0;
@@ -1742,22 +1911,21 @@ function setPetalPhoto(section, src) {
 }
 
 async function loadPetalPhotos() {
+  const loaded = new Set();
   if (sb) {
-    const { data } = await sb.from('petal_media').select('section, photo_url');
-    if (data && data.length) {
-      const loaded = new Set();
-      data.forEach(({ section, photo_url }) => {
-        if (photo_url) { setPetalPhoto(section, photo_url); loaded.add(section); }
-      });
-      // fallback for any section not yet in the DB
-      Object.entries(PETAL_FALLBACKS).forEach(([section, src]) => {
-        if (!loaded.has(section)) setPetalPhoto(section, src);
-      });
-      return;
-    }
+    try {
+      const { data } = await sb.from('petal_media').select('section, photo_url');
+      if (data) {
+        data.forEach(({ section, photo_url }) => {
+          if (photo_url) { setPetalPhoto(section, photo_url); loaded.add(section); }
+        });
+      }
+    } catch {}
   }
-  // full fallback if Supabase unavailable or table empty
-  Object.entries(PETAL_FALLBACKS).forEach(([section, src]) => setPetalPhoto(section, src));
+  // fallback for every section not covered by Supabase data
+  Object.entries(PETAL_FALLBACKS).forEach(([section, src]) => {
+    if (!loaded.has(section)) setPetalPhoto(section, src);
+  });
 }
 loadPetalPhotos();
 
