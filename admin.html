@@ -259,7 +259,7 @@ nav.tabs {
   display: flex; align-items: center; justify-content: center;
   overflow: hidden;
 }
-.petal-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.petal-thumb img, .petal-thumb video { width: 100%; height: 100%; object-fit: cover; }
 .petal-card-body {
   padding: 14px 16px;
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
@@ -277,6 +277,13 @@ label.petal-upload-btn {
   transition: opacity 0.2s, border-color 0.2s;
 }
 label.petal-upload-btn:hover { opacity: 1; border-color: var(--cream); }
+.stl-logo {
+  width: 40px; height: 40px; flex-shrink: 0;
+  border-radius: 6px; background: rgba(232,224,204,0.04);
+  border: 0.5px solid var(--border);
+  display: flex; align-items: center; justify-content: center; overflow: hidden;
+}
+.stl-logo img { width: 100%; height: 100%; object-fit: contain; }
 .petal-upload-status {
   font-size: 10px; opacity: 0.4; letter-spacing: 0.06em;
   margin-top: 4px; padding: 0 16px 12px;
@@ -325,6 +332,7 @@ label.petal-upload-btn:hover { opacity: 1; border-color: var(--cream); }
     <button class="tab-btn active" data-tab="home"     onclick="showTab('home')">Home</button>
     <button class="tab-btn"        data-tab="shows"    onclick="showTab('shows')">Shows</button>
     <button class="tab-btn"        data-tab="shop"     onclick="showTab('shop')">Shop</button>
+    <button class="tab-btn"        data-tab="media"    onclick="showTab('media')">Media</button>
     <button class="tab-btn"        data-tab="releases" onclick="showTab('releases')">Releases</button>
     <button class="tab-btn"        data-tab="about"    onclick="showTab('about')">About</button>
     <button class="tab-btn"        data-tab="settings" onclick="showTab('settings')">Settings</button>
@@ -425,7 +433,7 @@ function showTab(tab) {
   document.querySelectorAll('.tab-btn').forEach(b => {
     b.classList.toggle('active', b.dataset.tab === tab);
   });
-  const map = { home: loadHome, shows: loadShows, shop: loadShop, releases: loadReleases, about: loadAbout, settings: loadSettings };
+  const map = { home: loadHome, shows: loadShows, shop: loadShop, media: loadMedia, releases: loadReleases, about: loadAbout, settings: loadSettings };
   (map[tab] || (() => {}))();
 }
 
@@ -1143,15 +1151,28 @@ async function loadSettings() {
       </div>
     </div>
     <hr class="divider">
-    <h3 style="font-family:var(--fd);font-style:italic;font-size:22px;margin-bottom:24px">Stream links</h3>
+    <h3 style="font-family:var(--fd);font-style:italic;font-size:22px;margin-bottom:6px">Stream links &amp; logos</h3>
+    <p style="font-size:11px;opacity:.35;margin-bottom:24px;letter-spacing:0.04em;max-width:520px">
+      Upload a logo for each link to show it as a clickable logo on the home page. Transparent PNG or SVG works best.
+    </p>
     <div id="stream-links-list" style="max-width:520px">
       ${links.map(l => `
         <div class="sub-item" id="stl-${l.id}">
-          <div class="sub-item-main">
-            <span class="sub-item-label">${esc(l.platform)}</span>
-            <span class="sub-item-meta" style="word-break:break-all">${esc(l.url)}</span>
+          <div class="sub-item-main" style="display:flex;align-items:center;gap:14px">
+            <div class="stl-logo" id="stl-logo-${l.id}">${l.image_url ? `<img src="${esc(l.image_url)}" alt="">` : ''}</div>
+            <div style="display:flex;flex-direction:column;min-width:0">
+              <span class="sub-item-label">${esc(l.platform)}</span>
+              <span class="sub-item-meta" style="word-break:break-all">${esc(l.url)}</span>
+            </div>
           </div>
-          <button class="btn-danger" onclick="deleteStreamLink('${l.id}')">Delete</button>
+          <div style="display:flex;align-items:center;gap:10px">
+            <label class="petal-upload-btn">
+              ${l.image_url ? 'Replace logo' : 'Upload logo'}
+              <input type="file" accept="image/*,.svg" style="display:none"
+                onchange="uploadStreamLogo(this,'${l.id}')">
+            </label>
+            <button class="btn-danger" onclick="deleteStreamLink('${l.id}')">Delete</button>
+          </div>
         </div>`).join('')}
     </div>
     <div style="margin-top:20px;max-width:520px">
@@ -1233,6 +1254,135 @@ async function deleteStreamLink(id) {
   if (error) { toast('Error: ' + error.message); return; }
   toast('Deleted');
   loadSettings();
+}
+
+async function uploadStreamLogo(input, id) {
+  const file = input.files[0];
+  if (!file) return;
+  const ext = file.name.split('.').pop().toLowerCase() || 'png';
+  const path = `logos/${id}.${ext}`;
+  try {
+    const url = await uploadImage(file, path);
+    const bust = `${url}?v=${Date.now()}`;
+    const { error } = await sb.from('stream_links').update({ image_url: bust }).eq('id', id);
+    if (error) throw error;
+    const box = document.getElementById(`stl-logo-${id}`);
+    if (box) box.innerHTML = `<img src="${bust}" alt="">`;
+    toast('Logo updated');
+  } catch(e) {
+    toast('Upload failed: ' + e.message);
+  } finally {
+    input.value = '';
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   MEDIA — BACKGROUNDS + HOME VIDEO
+═══════════════════════════════════════════════════════════ */
+
+// UI config: order, grouping, labels, and kind for each media_slots row.
+const MEDIA_SLOTS = [
+  { group: 'Home',        key: 'home_bg_video',  kind: 'video', label: 'Background video',
+    hint: 'Muted, looping. Keep it small — see the export spec below.' },
+  { group: 'Home',        key: 'home_bg_poster', kind: 'image', label: 'Video poster',
+    hint: 'Still shown on mobile / while the video loads.' },
+  { group: 'Page backgrounds', key: 'world_bg', kind: 'image', label: 'World' },
+  { group: 'Page backgrounds', key: 'about_bg', kind: 'image', label: 'About' },
+  { group: 'Page backgrounds', key: 'shows_bg', kind: 'image', label: 'Shows' },
+  { group: 'Page backgrounds', key: 'shop_bg',  kind: 'image', label: 'Shop' },
+  { group: 'Page backgrounds', key: 'tbd_bg',   kind: 'image', label: 'TBD' },
+];
+
+// Soft + hard caps for video uploads (Supabase default bucket limit is 50MB).
+const REC_VIDEO_MB = 6;
+const MAX_VIDEO_MB = 50;
+
+function mediaThumbHtml(slot, url) {
+  if (!url) return `<span style="opacity:.2;font-size:11px;letter-spacing:.08em;text-transform:uppercase">No ${slot.kind}</span>`;
+  return slot.kind === 'video'
+    ? `<video src="${esc(url)}" muted playsinline preload="metadata"></video>`
+    : `<img src="${esc(url)}" alt="${esc(slot.label)}">`;
+}
+
+async function loadMedia() {
+  const panel = document.getElementById('panel');
+  panel.innerHTML = `
+    <div class="section-head"><h2 class="section-title">Media · Backgrounds &amp; Video</h2></div>
+    <p style="font-size:11px;opacity:.35;margin-bottom:8px;letter-spacing:0.04em;max-width:560px">
+      Background images for each page, plus the home-screen background video. Files are stored in Supabase and applied across the site automatically.
+    </p>
+    <p style="font-size:11px;opacity:.35;margin-bottom:28px;letter-spacing:0.04em;max-width:560px">
+      Background images: <strong>2560×1600</strong>, WebP or JPG, keep key art in the centre. Video: <strong>≤1080p H.264 MP4, ${REC_VIDEO_MB}MB or less</strong>, ~10–20s seamless loop.
+    </p>
+    <div id="media-groups"><p style="opacity:.3;font-size:12px">Loading…</p></div>`;
+
+  const { data, error } = await sb.from('media_slots').select('*');
+  if (error) { document.getElementById('media-groups').innerHTML = `<p style="color:#e88a6a">${esc(error.message)}</p>`; return; }
+  const byKey = Object.fromEntries((data || []).map(r => [r.key, r]));
+
+  const groups = [...new Set(MEDIA_SLOTS.map(s => s.group))];
+  document.getElementById('media-groups').innerHTML = groups.map(group => `
+    <h3 style="font-family:var(--fd);font-style:italic;font-size:20px;margin:8px 0 16px">${esc(group)}</h3>
+    <div class="petal-grid" style="margin-bottom:36px">
+      ${MEDIA_SLOTS.filter(s => s.group === group).map(slot => {
+        const url = byKey[slot.key]?.url || '';
+        const accept = slot.kind === 'video' ? 'video/*' : 'image/*';
+        return `
+          <div class="petal-card">
+            <div class="petal-thumb" id="mt-${slot.key}">${mediaThumbHtml(slot, url)}</div>
+            <div class="petal-card-body">
+              <span class="petal-section-label">${esc(slot.label)}</span>
+              <label class="petal-upload-btn">
+                Upload
+                <input type="file" accept="${accept}" style="display:none"
+                  onchange="uploadMediaSlot(this,'${slot.key}','${slot.kind}','${esc(slot.label)}')">
+              </label>
+            </div>
+            ${slot.hint ? `<div class="petal-upload-status" style="opacity:.3">${esc(slot.hint)}</div>` : ''}
+            <div class="petal-upload-status" id="mus-${slot.key}"></div>
+          </div>`;
+      }).join('')}
+    </div>`).join('');
+}
+
+async function uploadMediaSlot(input, key, kind, label) {
+  const file = input.files[0];
+  if (!file) return;
+  const status = document.getElementById(`mus-${key}`);
+
+  if (kind === 'video') {
+    const mb = file.size / (1024 * 1024);
+    if (mb > MAX_VIDEO_MB) {
+      status.textContent = `Too large (${mb.toFixed(1)}MB). Max ${MAX_VIDEO_MB}MB — compress it first.`;
+      toast(`Video too large — ${MAX_VIDEO_MB}MB max`);
+      input.value = '';
+      return;
+    }
+    if (mb > REC_VIDEO_MB) toast(`Heads up: ${mb.toFixed(1)}MB is above the ${REC_VIDEO_MB}MB target — it may load slowly`);
+  }
+
+  status.textContent = 'Uploading…';
+  const ext = file.name.split('.').pop().toLowerCase() || (kind === 'video' ? 'mp4' : 'jpg');
+  const path = `media-slots/${key}.${ext}`;
+  try {
+    const url = await uploadImage(file, path);
+    // Cache-bust so the new file shows immediately (upsert reuses the same path).
+    const bust = `${url}?v=${Date.now()}`;
+    const { error } = await sb.from('media_slots').upsert(
+      { key, kind, url: bust, updated_at: new Date().toISOString() },
+      { onConflict: 'key' }
+    );
+    if (error) throw error;
+    document.getElementById(`mt-${key}`).innerHTML = mediaThumbHtml({ kind, label }, bust);
+    status.textContent = 'Updated';
+    setTimeout(() => { status.textContent = ''; }, 3000);
+    toast(`${label} updated`);
+  } catch(e) {
+    status.textContent = 'Failed: ' + e.message;
+    toast('Upload failed: ' + e.message);
+  } finally {
+    input.value = '';
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════
