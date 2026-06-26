@@ -386,22 +386,86 @@ function renderReleaseBlock(r) {
   </div>`;
 }
 
-/* World landing = grid of album covers; each opens its own page (#world/<slug>). */
+/* Scroll-reveal the World feature spreads as they enter the viewport. */
+function initWorldReveal() {
+  const root = document.getElementById('overlay');
+  const els = Array.from(document.querySelectorAll('#section-content .wf'));
+  if (!els.length) return;
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reduce || !('IntersectionObserver' in window)) {
+    els.forEach(el => el.classList.add('in'));
+    return;
+  }
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
+    });
+  }, { root, threshold: 0.12, rootMargin: '0px 0px -8% 0px' });
+  // Reveal whatever's already on screen immediately (after layout settles);
+  // observe the rest so they reveal on scroll. Never leave content invisible.
+  requestAnimationFrame(() => {
+    const vh = root ? root.clientHeight : window.innerHeight;
+    els.forEach(el => {
+      if (el.getBoundingClientRect().top < vh * 0.92) el.classList.add('in');
+      else io.observe(el);
+    });
+  });
+}
+
+/* First-sentence (or trimmed) lead for the World feature spreads. */
+function leadOf(desc) {
+  desc = (desc || '').trim().replace(/\s+/g, ' ');
+  if (!desc) return '';
+  const m = desc.match(/^[\s\S]*?[.!?](\s|$)/);
+  let lead = m ? m[0].trim() : desc;
+  if (lead.length > 230) {
+    lead = desc.slice(0, 210);
+    lead = lead.slice(0, lead.lastIndexOf(' ')).trim() + '…';
+  }
+  return lead;
+}
+
+/* World landing = an editorial retrospective: one alternating spread per
+   release (year stamp, cover, lead, pull-quote), each opening its own page. */
 function renderWorld(releases) {
-  const cards = releases.filter(r => r.visible !== false).map(r => {
-    const cover = r.cover_art_url ? `<img src="${esc(r.cover_art_url)}" alt="${esc(r.title)}">` : '';
-    return `<div class="album-card" role="button" tabindex="0"
-      onclick="openAlbum('${esc(r._slug)}')"
-      onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openAlbum('${esc(r._slug)}')}">
-      <div class="album-cover">${cover}</div>
-      <span class="album-card-title">${esc(r.title)}</span>
-      <span class="album-card-year">${esc(r.year)}${r.type ? ` &middot; ${esc(r.type)}` : ''}</span>
-    </div>`;
+  const list = releases.filter(r => r.visible !== false);
+  const features = list.map(r => {
+    const slug  = esc(r._slug);
+    const open  = `openAlbum('${slug}')`;
+    const cover = r.cover_art_url
+      ? `<img src="${esc(r.cover_art_url)}" alt="${esc(r.title)}">` : '';
+    const tracks = (r.release_tracks || []).length;
+    const eyebrow = [
+      esc(r.type || ''),
+      tracks ? `${tracks} track${tracks !== 1 ? 's' : ''}` : '',
+    ].filter(Boolean).join(' &middot; ');
+    const lead = leadOf(r.description);
+    const q = (r.release_quotes || [])
+      .slice().sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))[0];
+    const quote = q
+      ? `<blockquote class="wf-quote">&ldquo;${esc(q.quote)}&rdquo;<cite>${esc(q.source)}</cite></blockquote>`
+      : '';
+    return `<article class="wf">
+      <div class="wf-media" onclick="${open}">
+        <span class="wf-year">${esc(r.year)}</span>
+        <div class="wf-cover">${cover}</div>
+      </div>
+      <div class="wf-text">
+        ${eyebrow ? `<span class="wf-eyebrow">${eyebrow}</span>` : ''}
+        <h3 class="wf-title" role="button" tabindex="0" onclick="${open}"
+            onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();${open}}">${esc(r.title)}</h3>
+        ${lead ? `<p class="wf-lead">${esc(lead)}</p>` : ''}
+        ${quote}
+        <button class="wf-open" onclick="${open}">Explore the record <span class="wf-arrow">&rarr;</span></button>
+      </div>
+    </article>`;
   }).join('');
-  return `<div class="world-hero">
-    <h2 class="world-title">World</h2>
-    <p class="world-sub">The story so far — chronological</p>
-  </div><div class="album-grid">${cards}</div>`;
+  return `<header class="world-masthead">
+      <span class="wm-eyebrow">Mau from Nowhere</span>
+      <h2 class="world-title">World</h2>
+      <p class="wm-dek">The catalogue in order — every record and the era it belongs to, traced from the early Nairobi singles outward.</p>
+    </header>
+    <div class="world-features">${features}</div>`;
 }
 
 /* One album's own page — reuses the existing release detail block. */
@@ -741,6 +805,7 @@ function openSection(id, fromRoute) {
 
   content.innerHTML = sec.html;
   if (id === 'about') initAbout();
+  if (id === 'world') initWorldReveal();
   overlay.classList.add('open');
   home.classList.add('hidden');
   document.body.classList.add('section-open');   // retract flower → corner
