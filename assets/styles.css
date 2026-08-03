@@ -1056,10 +1056,8 @@ body.section-open #section-content { transform: none; opacity: 1; }
   display: flex; flex-direction: column; align-items: center; gap: 0;
   text-decoration: none; cursor: pointer;
 }
-.stream-link-line {
-  display: block; width: 0.5px; height: 12px;
-  background: rgba(232,224,204,0.2);
-}
+/* Kept only for a platform we have no glyph for — the tick above each link is
+   gone, so this is the bare name. */
 .stream-link-name {
   font-family: 'Playfair Display', serif; font-style: italic;
   font-size: 10px; color: var(--cream); opacity: 0.45;
@@ -1068,6 +1066,23 @@ body.section-open #section-content { transform: none; opacity: 1; }
 .stream-link:hover .stream-link-name,
 .stream-link:focus-visible .stream-link-name { opacity: 0.9; }
 .stream-link:active .stream-link-name { opacity: 1; }
+
+/* Platform marks. currentColor means one declaration sets every glyph to the
+   same cream the text used, and the opacity states carry over unchanged. */
+.stream-icon {
+  display: block; width: 18px; height: 18px;
+  color: var(--cream); fill: currentColor;
+  opacity: 0.45;
+  transition: opacity 0.2s, transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.stream-link:hover .stream-icon,
+.stream-link:focus-visible .stream-icon { opacity: 0.9; transform: translateY(-2px); }
+.stream-link:active .stream-icon { opacity: 1; }
+/* The visible name is gone, so focus needs a mark of its own to stay keyboard-usable. */
+.stream-link:focus-visible {
+  outline: 1px solid rgba(232, 224, 204, 0.5);
+  outline-offset: 6px; border-radius: 2px;
+}
 /* Uploaded platform logos (replace the text links on the home screen) */
 .stream-logo-img {
   height: 22px; width: auto; max-width: 88px;
